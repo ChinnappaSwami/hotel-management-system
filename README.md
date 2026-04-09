@@ -231,7 +231,7 @@ Bookings: booking_id, customer_id, room_id, check_in_date,
 
 > | Manage Customers | Manage Rooms |
 > |---|---|
-> | ![Customers](Required_images/manage_customers.png) | ![Rooms](Required_images/manage_rooms.png) |
+> | ![Customers](Required_images/Manage_customers.png) | ![Rooms](Required_images/manage_rooms.png) |
 
 > | Booking & Bill | Bill Popup |
 > |---|---|
