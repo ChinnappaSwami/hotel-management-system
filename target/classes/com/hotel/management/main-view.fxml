@@ -63,10 +63,10 @@
                                                 <TextField fx:id="customerNameField" promptText="Enter full name" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
                                                 <Label styleClass="field-label" text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                                                <TextField fx:id="customerEmailField" promptText="Enter email" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                                <TextField fx:id="customerEmailField" promptText="e.g. user@mail.com" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                                                <Label styleClass="field-label" text="Phone:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                                                <TextField fx:id="customerPhoneField" promptText="Enter phone" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                                <Label styleClass="field-label" text="Phone (10 digits):" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                                                <TextField fx:id="customerPhoneField" promptText="10-digit number" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
                                                 <Label styleClass="field-label" text="Address:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
                                                 <TextField fx:id="customerAddressField" promptText="Enter address" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
@@ -84,14 +84,20 @@
                                 </VBox>
 
                                 <!-- RIGHT: Table -->
-                                <VBox spacing="12.0" prefWidth="620.0" styleClass="content-vbox">
+                                <VBox spacing="8.0" prefWidth="620.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Customers"/>
-                                        <TableView fx:id="customerTable" prefHeight="500.0">
+
+                                        <!-- Search bar: Search by Name -->
+                                        <TextField fx:id="customerSearchField"
+                                                   promptText="🔍  Search by Name..."
+                                                   style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #a8d5ba; -fx-padding: 5 10 5 10;"/>
+
+                                        <TableView fx:id="customerTable" prefHeight="470.0">
                                             <columns>
-                                                <TableColumn fx:id="customerIdCol" prefWidth="60.0" text="ID"/>
-                                                <TableColumn fx:id="customerNameCol" prefWidth="180.0" text="Name"/>
-                                                <TableColumn fx:id="customerEmailCol" prefWidth="180.0" text="Email"/>
+                                                <TableColumn fx:id="customerIdCol"    prefWidth="60.0"  text="ID"/>
+                                                <TableColumn fx:id="customerNameCol"  prefWidth="180.0" text="Name"/>
+                                                <TableColumn fx:id="customerEmailCol" prefWidth="190.0" text="Email"/>
                                                 <TableColumn fx:id="customerPhoneCol" prefWidth="120.0" text="Phone"/>
                                             </columns>
                                         </TableView>
@@ -120,8 +126,9 @@
                                                 <Label styleClass="field-label" text="Room Number:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                                                 <TextField fx:id="addRoomNumberField" promptText="e.g. 401" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
+                                                <!-- Dropdown for Room Type -->
                                                 <Label styleClass="field-label" text="Room Type:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                                                <TextField fx:id="addRoomTypeField" promptText="e.g. SINGLE, DOUBLE, SUITE" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                                <ComboBox fx:id="addRoomTypeCombo" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
                                                 <Label styleClass="field-label" text="Price / Day (Rs.):" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                                                 <TextField fx:id="addRoomPriceField" promptText="e.g. 2500.00" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
@@ -139,15 +146,21 @@
                                 </VBox>
 
                                 <!-- RIGHT: Table -->
-                                <VBox spacing="12.0" prefWidth="620.0" styleClass="content-vbox">
+                                <VBox spacing="8.0" prefWidth="620.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Current Rooms"/>
-                                        <TableView fx:id="roomTable" prefHeight="500.0">
+
+                                        <!-- Search bar: Search by Room Number -->
+                                        <TextField fx:id="roomSearchField"
+                                                   promptText="🔍  Search by Room No..."
+                                                   style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #a8d5ba; -fx-padding: 5 10 5 10;"/>
+
+                                        <TableView fx:id="roomTable" prefHeight="470.0">
                                             <columns>
-                                                <TableColumn fx:id="roomIdCol" prefWidth="60.0" text="ID"/>
+                                                <TableColumn fx:id="roomIdCol"     prefWidth="60.0"  text="ID"/>
                                                 <TableColumn fx:id="roomNumberCol" prefWidth="120.0" text="Room No"/>
-                                                <TableColumn fx:id="roomTypeCol" prefWidth="120.0" text="Type"/>
-                                                <TableColumn fx:id="roomPriceCol" prefWidth="110.0" text="Price/Day"/>
+                                                <TableColumn fx:id="roomTypeCol"   prefWidth="120.0" text="Type"/>
+                                                <TableColumn fx:id="roomPriceCol"  prefWidth="110.0" text="Price/Day"/>
                                                 <TableColumn fx:id="roomStatusCol" prefWidth="110.0" text="Status"/>
                                             </columns>
                                         </TableView>
@@ -182,8 +195,9 @@
                                                 <Label styleClass="field-label" text="Check-in Date:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
                                                 <DatePicker fx:id="checkInDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-                                                <Label styleClass="field-label" text="No. of Days:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                                                <TextField fx:id="daysField" promptText="e.g. 2" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                                                <!-- Check-out Date replaces "No. of Days" -->
+                                                <Label styleClass="field-label" text="Check-out Date:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                                                <DatePicker fx:id="checkOutDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
                                                 <CheckBox fx:id="includeTaxCheck" text="Include Tax" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
@@ -217,16 +231,22 @@
                                 </VBox>
 
                                 <!-- RIGHT: Bookings Table -->
-                                <VBox spacing="12.0" prefWidth="620.0" styleClass="content-vbox">
+                                <VBox spacing="8.0" prefWidth="620.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Bookings"/>
-                                        <TableView fx:id="bookingTable" prefHeight="500.0">
+
+                                        <!-- Search bar: Search by Booking ID -->
+                                        <TextField fx:id="bookingSearchField"
+                                                   promptText="🔍  Search by Booking ID..."
+                                                   style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #a8d5ba; -fx-padding: 5 10 5 10;"/>
+
+                                        <TableView fx:id="bookingTable" prefHeight="470.0">
                                             <columns>
-                                                <TableColumn fx:id="bookingIdCol" prefWidth="80.0" text="Booking ID"/>
+                                                <TableColumn fx:id="bookingIdCol"       prefWidth="90.0"  text="Booking ID"/>
                                                 <TableColumn fx:id="bookingCustomerCol" prefWidth="100.0" text="Customer ID"/>
-                                                <TableColumn fx:id="bookingRoomCol" prefWidth="90.0" text="Room ID"/>
-                                                <TableColumn fx:id="bookingDaysCol" prefWidth="70.0" text="Days"/>
-                                                <TableColumn fx:id="bookingTotalCol" prefWidth="120.0" text="Total"/>
+                                                <TableColumn fx:id="bookingRoomCol"     prefWidth="90.0"  text="Room ID"/>
+                                                <TableColumn fx:id="bookingDaysCol"     prefWidth="70.0"  text="Days"/>
+                                                <TableColumn fx:id="bookingTotalCol"    prefWidth="120.0" text="Total"/>
                                             </columns>
                                         </TableView>
                                     </children>

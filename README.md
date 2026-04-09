@@ -130,7 +130,7 @@ hotel-management-system/
 **1.** Open your MySQL client and run the schema script:
 
 ```bash
-mysql -u root -p < src/main/resources/schema.sql
+cmd /c "mysql -u root -p < src/main/resources/schema.sql"
 ```
 
 This creates the `hotel_management` database with the `rooms`, `customers`, and `bookings` tables, and seeds 5 sample rooms.

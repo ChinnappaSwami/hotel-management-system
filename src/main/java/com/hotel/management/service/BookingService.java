@@ -9,7 +9,39 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BookingService {
+/**
+ * Service class for Booking operations.
+ * Implements the generic {@link Repository} interface with Booking as T and Integer as ID.
+ */
+public class BookingService implements Repository<Booking, Integer> {
+
+    // ── Repository<Booking, Integer> contract ─────────────────────────────
+
+    /**
+     * Saves a new booking. Returns 1 on success, -1 on failure.
+     */
+    @Override
+    public Integer save(Booking booking) throws Exception {
+        return createBooking(booking) ? 1 : -1;
+    }
+
+    /**
+     * Returns all bookings ordered by booking_id descending.
+     */
+    @Override
+    public List<Booking> findAll() throws Exception {
+        return getAllBookings();
+    }
+
+    /**
+     * Deletes a booking by its ID.
+     */
+    @Override
+    public boolean deleteById(Integer id) throws Exception {
+        return deleteBooking(id);
+    }
+
+    // ── Concrete methods ──────────────────────────────────────────────────
 
     public boolean createBooking(Booking booking) throws Exception {
         String sql = "INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) "

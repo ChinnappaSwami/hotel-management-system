@@ -10,7 +10,39 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomerService {
+/**
+ * Service class for Customer operations.
+ * Implements the generic {@link Repository} interface with Customer as T and Integer as ID.
+ */
+public class CustomerService implements Repository<Customer, Integer> {
+
+    // ── Repository<Customer, Integer> contract ────────────────────────────
+
+    /**
+     * Saves a new customer and returns the generated customer_id, or -1 on failure.
+     */
+    @Override
+    public Integer save(Customer customer) throws Exception {
+        return addCustomer(customer);
+    }
+
+    /**
+     * Returns all customers ordered by customer_id descending.
+     */
+    @Override
+    public List<Customer> findAll() throws Exception {
+        return getAllCustomers();
+    }
+
+    /**
+     * Deletes a customer by ID (only if no active bookings exist).
+     */
+    @Override
+    public boolean deleteById(Integer id) throws Exception {
+        return deleteCustomer(id);
+    }
+
+    // ── Concrete methods ──────────────────────────────────────────────────
 
     public int addCustomer(Customer customer) throws Exception {
         String sql = "INSERT INTO customers (full_name, email, phone, address) VALUES (?, ?, ?, ?)";
