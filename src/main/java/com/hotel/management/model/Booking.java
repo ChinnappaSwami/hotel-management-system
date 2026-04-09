@@ -12,6 +12,8 @@ public class Booking {
     private double taxPercent;
     private double totalAmount;
 
+    private double revenue;
+
     public Booking() {
     }
 
@@ -25,10 +27,11 @@ public class Booking {
         this.numberOfDays = numberOfDays;
         this.taxPercent = taxPercent;
         this.totalAmount = totalAmount;
+        this.revenue = 0.0;
     }
 
     public Booking(int customerId, int roomId, LocalDate checkInDate, LocalDate checkOutDate,
-                   int numberOfDays, double taxPercent, double totalAmount) {
+                   int numberOfDays, double taxPercent, double totalAmount, double revenue) {
         this.customerId = customerId;
         this.roomId = roomId;
         this.checkInDate = checkInDate;
@@ -36,6 +39,7 @@ public class Booking {
         this.numberOfDays = numberOfDays;
         this.taxPercent = taxPercent;
         this.totalAmount = totalAmount;
+        this.revenue = revenue;
     }
 
     public int getId() {
@@ -100,5 +104,13 @@ public class Booking {
 
     public void setTotalAmount(double totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public double getRevenue() {
+        return revenue;
+    }
+
+    public void setRevenue(double revenue) {
+        this.revenue = revenue;
     }
 }

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -45,12 +48,10 @@
         <TabPane tabClosingPolicy="UNAVAILABLE">
 
             <tabs>
-                <!-- ==================== TAB 1: MANAGE CUSTOMERS ==================== -->
                 <Tab text="Manage Customers">
                     <content>
                         <HBox spacing="14.0" style="-fx-padding: 16;">
                             <children>
-                                <!-- LEFT: Form -->
                                 <VBox spacing="12.0" prefWidth="420.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Register Customer"/>
@@ -84,12 +85,10 @@
                                     </children>
                                 </VBox>
 
-                                <!-- RIGHT: Table -->
                                 <VBox spacing="8.0" prefWidth="620.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Customers"/>
 
-                                        <!-- Search bar: Search by Name -->
                                         <TextField fx:id="customerSearchField"
                                                    promptText="🔍  Search by Name..."
                                                    style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #a8d5ba; -fx-padding: 5 10 5 10;"/>
@@ -109,12 +108,10 @@
                     </content>
                 </Tab>
 
-                <!-- ==================== TAB 2: MANAGE ROOMS ==================== -->
                 <Tab text="Manage Rooms">
                     <content>
                         <HBox spacing="14.0" style="-fx-padding: 16;">
                             <children>
-                                <!-- LEFT: Forms -->
                                 <VBox spacing="12.0" prefWidth="420.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Add New Room"/>
@@ -127,7 +124,6 @@
                                                 <Label styleClass="field-label" text="Room Number:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                                                 <TextField fx:id="addRoomNumberField" promptText="e.g. 401" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                                                <!-- Dropdown for Room Type -->
                                                 <Label styleClass="field-label" text="Room Type:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                                                 <ComboBox fx:id="addRoomTypeCombo" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
@@ -146,12 +142,10 @@
                                     </children>
                                 </VBox>
 
-                                <!-- RIGHT: Table -->
                                 <VBox spacing="8.0" prefWidth="620.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Current Rooms"/>
 
-                                        <!-- Search bar: Search by Room Number -->
                                         <TextField fx:id="roomSearchField"
                                                    promptText="🔍  Search by Room No..."
                                                    style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #a8d5ba; -fx-padding: 5 10 5 10;"/>
@@ -172,12 +166,10 @@
                     </content>
                 </Tab>
 
-                <!-- ==================== TAB 3: BOOK AND BILL ==================== -->
                 <Tab text="Book and Bill">
                     <content>
                         <HBox spacing="14.0" style="-fx-padding: 16;">
                             <children>
-                                <!-- LEFT: Booking Form -->
                                 <VBox spacing="12.0" prefWidth="420.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Book a Room"/>
@@ -196,7 +188,6 @@
                                                 <Label styleClass="field-label" text="Check-in Date:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
                                                 <DatePicker fx:id="checkInDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-                                                <!-- Check-out Date replaces "No. of Days" -->
                                                 <Label styleClass="field-label" text="Check-out Date:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
                                                 <DatePicker fx:id="checkOutDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
@@ -231,12 +222,10 @@
                                     </children>
                                 </VBox>
 
-                                <!-- RIGHT: Bookings Table -->
                                 <VBox spacing="8.0" prefWidth="620.0" styleClass="content-vbox">
                                     <children>
                                         <Label styleClass="section-title" text="Bookings"/>
 
-                                        <!-- Search bar: Search by Booking ID -->
                                         <TextField fx:id="bookingSearchField"
                                                    promptText="🔍  Search by Booking ID..."
                                                    style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #a8d5ba; -fx-padding: 5 10 5 10;"/>
@@ -257,12 +246,10 @@
                     </content>
                 </Tab>
 
-                <!-- ==================== TAB 4: CLEANING ==================== -->
                 <Tab text="Cleaning">
                     <content>
                         <VBox spacing="14.0" style="-fx-padding: 16;">
 
-                            <!-- Header row -->
                             <HBox alignment="CENTER_LEFT" spacing="20.0">
                                 <Label styleClass="section-title" text="Room Cleaning Queue"/>
                                 <Label fx:id="cleaningStatusLabel"
@@ -270,11 +257,9 @@
                                        style="-fx-font-size: 13px; -fx-text-fill: #555; -fx-font-style: italic;"/>
                             </HBox>
 
-                            <!-- Info banner -->
-                            <Label text="Rooms appear here after checkout and are cleaned by up to 3 parallel cleaner threads (≈ 30 s each)."
+                            <Label text="Rooms appear here after checkout. Up to 3 cleaner threads run concurrently (Producer-Consumer: synchronized + wait/notify)."
                                    style="-fx-font-size: 12px; -fx-text-fill: #888; -fx-font-style: italic;"/>
 
-                            <!-- Cleaning table -->
                             <TableView fx:id="cleaningTable" prefHeight="540.0" VBox.vgrow="ALWAYS"
                                        style="-fx-background-color: #f9fffe; -fx-border-color: #a8d5ba; -fx-border-radius: 6; -fx-background-radius: 6;">
                                 <columns>
@@ -286,6 +271,99 @@
                                 <placeholder>
                                     <Label text="✅  No rooms are currently being cleaned."
                                            style="-fx-font-size: 14px; -fx-text-fill: #27ae60; -fx-font-style: italic;"/>
+                                </placeholder>
+                            </TableView>
+
+                        </VBox>
+                    </content>
+                </Tab>
+
+                <Tab text="Revenue &amp; Audit" onSelectionChanged="#onRevenueTabSelected">
+                    <content>
+                        <VBox spacing="16.0" style="-fx-padding: 16;">
+
+                            <HBox alignment="CENTER_LEFT" spacing="20.0">
+                                <Label styleClass="section-title" text="Revenue by Room Type"/>
+                                <Button mnemonicParsing="false" onAction="#onRefreshRevenue"
+                                        text="🔄 Refresh Charts"
+                                        style="-fx-background-color: #2980b9; -fx-text-fill: white;
+                                               -fx-font-weight: bold; -fx-background-radius: 5;
+                                               -fx-cursor: hand;"/>
+                            </HBox>
+
+                            <HBox spacing="14.0" alignment="CENTER">
+                                <children>
+
+                                    <VBox spacing="6.0" alignment="CENTER"
+                                          style="-fx-background-color: #f0faf4; -fx-border-color: #a8d5ba;
+                                                 -fx-border-radius: 8; -fx-background-radius: 8;
+                                                 -fx-padding: 12;">
+                                        <Label text="Single Rooms Revenue"
+                                               style="-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #1a7a4a;"/>
+                                        <BarChart fx:id="singleRevenueChart" prefWidth="310.0" prefHeight="280.0"
+                                                  animated="false">
+                                            <xAxis>
+                                                <CategoryAxis label="Room Type"/>
+                                            </xAxis>
+                                            <yAxis>
+                                                <NumberAxis label="Revenue (Rs.)" lowerBound="0" autoRanging="true"/>
+                                            </yAxis>
+                                        </BarChart>
+                                    </VBox>
+
+                                    <VBox spacing="6.0" alignment="CENTER"
+                                          style="-fx-background-color: #f0f4fa; -fx-border-color: #a8b5d5;
+                                                 -fx-border-radius: 8; -fx-background-radius: 8;
+                                                 -fx-padding: 12;">
+                                        <Label text="Double Rooms Revenue"
+                                               style="-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #1a3a7a;"/>
+                                        <BarChart fx:id="doubleRevenueChart" prefWidth="310.0" prefHeight="280.0"
+                                                  animated="false">
+                                            <xAxis>
+                                                <CategoryAxis label="Room Type"/>
+                                            </xAxis>
+                                            <yAxis>
+                                                <NumberAxis label="Revenue (Rs.)" lowerBound="0" autoRanging="true"/>
+                                            </yAxis>
+                                        </BarChart>
+                                    </VBox>
+
+                                    <VBox spacing="6.0" alignment="CENTER"
+                                          style="-fx-background-color: #faf4f0; -fx-border-color: #d5b8a8;
+                                                 -fx-border-radius: 8; -fx-background-radius: 8;
+                                                 -fx-padding: 12;">
+                                        <Label text="Suite Rooms Revenue"
+                                               style="-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #7a3a1a;"/>
+                                        <BarChart fx:id="suiteRevenueChart" prefWidth="310.0" prefHeight="280.0"
+                                                  animated="false">
+                                            <xAxis>
+                                                <CategoryAxis label="Room Type"/>
+                                            </xAxis>
+                                            <yAxis>
+                                                <NumberAxis label="Revenue (Rs.)" lowerBound="0" autoRanging="true"/>
+                                            </yAxis>
+                                        </BarChart>
+                                    </VBox>
+
+                                </children>
+                            </HBox>
+
+                            <Label styleClass="section-title" text="Audit Log (Audit.dat — Serialized)"/>
+                            <Label text="All events are serialized to Audit.dat using ObjectOutputStream / ObjectInputStream (Week 6 Lab Manual)."
+                                   style="-fx-font-size: 12px; -fx-text-fill: #888; -fx-font-style: italic;"/>
+
+                            <TableView fx:id="auditTable" prefHeight="220.0" VBox.vgrow="ALWAYS"
+                                       style="-fx-background-color: #fffdf0; -fx-border-color: #d4c87a;
+                                              -fx-border-radius: 6; -fx-background-radius: 6;">
+                                <columns>
+                                    <TableColumn fx:id="auditTimestampCol" prefWidth="180.0" text="Timestamp"/>
+                                    <TableColumn fx:id="auditEventCol"     prefWidth="200.0" text="Event Type"/>
+                                    <TableColumn fx:id="auditRoomCol"      prefWidth="110.0" text="Room No"/>
+                                    <TableColumn fx:id="auditCustomerCol"  prefWidth="200.0" text="Customer"/>
+                                </columns>
+                                <placeholder>
+                                    <Label text="No audit records yet. Perform an action to generate events."
+                                           style="-fx-font-size: 13px; -fx-text-fill: #aaa; -fx-font-style: italic;"/>
                                 </placeholder>
                             </TableView>
 

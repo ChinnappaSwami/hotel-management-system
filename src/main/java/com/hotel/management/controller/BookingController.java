@@ -1,22 +1,28 @@
 package com.hotel.management.controller;
 
 import com.hotel.management.cleaning.CleaningManager;
+import com.hotel.management.model.AuditRecord;
 import com.hotel.management.model.Booking;
 import com.hotel.management.model.Customer;
 import com.hotel.management.model.Room;
+import com.hotel.management.service.AuditManager;
 import com.hotel.management.service.BillingService;
 import com.hotel.management.service.BookingService;
 import com.hotel.management.service.CustomerService;
+import com.hotel.management.service.RevenueManager;
 import com.hotel.management.service.RoomService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
@@ -32,10 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 public class BookingController {
 
-    // ── Customer tab ──────────────────────────────────────────────────────
     @FXML private TextField customerNameField;
     @FXML private TextField customerEmailField;
     @FXML private TextField customerPhoneField;
@@ -47,7 +51,6 @@ public class BookingController {
     @FXML private TableColumn<Customer, String>  customerEmailCol;
     @FXML private TableColumn<Customer, String>  customerPhoneCol;
 
-    // ── Room tab ──────────────────────────────────────────────────────────
     @FXML private TextField addRoomNumberField;
     @FXML private ComboBox<String> addRoomTypeCombo;
     @FXML private TextField addRoomPriceField;
@@ -59,8 +62,7 @@ public class BookingController {
     @FXML private TableColumn<Room, Double>  roomPriceCol;
     @FXML private TableColumn<Room, String>  roomStatusCol;
 
-    // ── Book and Bill tab ─────────────────────────────────────────────────
-    @FXML private TextField      bookingCustomerIdField;
+    @FXML private TextField       bookingCustomerIdField;
     @FXML private ComboBox<String> bookingRoomTypeCombo;
     @FXML private ComboBox<Room>   bookingRoomCombo;
     @FXML private DatePicker       checkInDatePicker;
@@ -69,48 +71,57 @@ public class BookingController {
     @FXML private TextField        taxPercentField;
     @FXML private Label            bookingBillLabel;
     @FXML private TextField        bookingSearchField;
-    @FXML private TableView<Booking> bookingTable;
+    @FXML private TableView<Booking>  bookingTable;
     @FXML private TableColumn<Booking, Integer> bookingIdCol;
     @FXML private TableColumn<Booking, Integer> bookingCustomerCol;
     @FXML private TableColumn<Booking, Integer> bookingRoomCol;
     @FXML private TableColumn<Booking, Integer> bookingDaysCol;
     @FXML private TableColumn<Booking, Double>  bookingTotalCol;
 
-    // ── Cleaning tab ──────────────────────────────────────────────────────
-    @FXML private TableView<Room>               cleaningTable;
-    @FXML private TableColumn<Room, String>     cleaningRoomNumberCol;
-    @FXML private TableColumn<Room, String>     cleaningRoomTypeCol;
-    @FXML private TableColumn<Room, String>     cleaningStatusCol;
-    @FXML private TableColumn<Room, Void>       cleaningProgressCol;
-    @FXML private Label                         cleaningStatusLabel;
+    @FXML private TableView<Room>           cleaningTable;
+    @FXML private TableColumn<Room, String> cleaningRoomNumberCol;
+    @FXML private TableColumn<Room, String> cleaningRoomTypeCol;
+    @FXML private TableColumn<Room, String> cleaningStatusCol;
+    @FXML private TableColumn<Room, Void>   cleaningProgressCol;
+    @FXML private Label                     cleaningStatusLabel;
 
-    // ── Refresh button ────────────────────────────────────────────────────
+    @FXML private BarChart<String, Number> singleRevenueChart;
+
+    @FXML private BarChart<String, Number> doubleRevenueChart;
+
+    @FXML private BarChart<String, Number> suiteRevenueChart;
+
+    @FXML private TableView<AuditRecord>           auditTable;
+    @FXML private TableColumn<AuditRecord, String> auditTimestampCol;
+    @FXML private TableColumn<AuditRecord, String> auditEventCol;
+    @FXML private TableColumn<AuditRecord, Integer> auditRoomCol;
+    @FXML private TableColumn<AuditRecord, String> auditCustomerCol;
+
     @FXML private Button refreshBtn;
 
-    // ── Services ──────────────────────────────────────────────────────────
     private final CustomerService customerService = new CustomerService();
     private final RoomService     roomService     = new RoomService();
     private final BookingService  bookingService  = new BookingService();
 
-    // ── Backing observable lists ─────────────────────────────────────────
-    private final ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
-    private final ObservableList<Room>     allRooms     = FXCollections.observableArrayList();
-    private final ObservableList<Booking>  allBookings  = FXCollections.observableArrayList();
-    private final ObservableList<Room>     cleaningRooms = FXCollections.observableArrayList();
+    private final AuditManager   auditManager   = AuditManager.getInstance();
 
-    // ── Cleaning infrastructure ───────────────────────────────────────────
-    /** One ProgressBar per room being cleaned, keyed by room.getId(). */
+    private final RevenueManager revenueManager = RevenueManager.getInstance();
+
+    private final ObservableList<Customer>    allCustomers  = FXCollections.observableArrayList();
+    private final ObservableList<Room>        allRooms      = FXCollections.observableArrayList();
+    private final ObservableList<Booking>     allBookings   = FXCollections.observableArrayList();
+    private final ObservableList<Room>        cleaningRooms = FXCollections.observableArrayList();
+    private final ObservableList<AuditRecord> auditRecords  = FXCollections.observableArrayList();
+
     private final Map<Integer, ProgressBar> cleaningProgressBars = new HashMap<>();
+
     private final CleaningManager cleaningManager = new CleaningManager();
 
-    // ── Background DB thread pool ─────────────────────────────────────────
     private final ExecutorService executor = Executors.newCachedThreadPool(r -> {
         Thread t = new Thread(r, "HotelMgmt-Worker");
         t.setDaemon(true);
         return t;
     });
-
-    // ─────────────────────── INITIALISE ──────────────────────────────────
 
     @FXML
     public void initialize() {
@@ -119,10 +130,9 @@ public class BookingController {
         setupSearchBars();
         setupCleaningTable();
         setupRoomRowColors();
+        setupAuditTable();
         loadAllData();
     }
-
-    // ── Table column bindings ─────────────────────────────────────────────
 
     private void setupTables() {
         customerIdCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -143,18 +153,19 @@ public class BookingController {
         bookingTotalCol.setCellValueFactory(new PropertyValueFactory<>("totalAmount"));
     }
 
-    // ── Cleaning tab setup ────────────────────────────────────────────────
+    private void setupAuditTable() {
+        auditTimestampCol.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
+        auditEventCol.setCellValueFactory(new PropertyValueFactory<>("eventType"));
+        auditRoomCol.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
+        auditCustomerCol.setCellValueFactory(new PropertyValueFactory<>("customerName"));
+        auditTable.setItems(auditRecords);
+    }
 
-    /**
-     * Wires up the Cleaning table.  The Progress column uses a custom
-     * TableCell that embeds the ProgressBar stored in cleaningProgressBars.
-     */
     private void setupCleaningTable() {
         cleaningRoomNumberCol.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
         cleaningRoomTypeCol.setCellValueFactory(new PropertyValueFactory<>("roomType"));
         cleaningStatusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Progress column – embedded ProgressBar looked up by room id
         cleaningProgressCol.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -177,10 +188,6 @@ public class BookingController {
         cleaningTable.setItems(cleaningRooms);
     }
 
-    /**
-     * Applies CSS row-colour classes to the Room table based on status.
-     * Green = AVAILABLE, Amber = CLEANING, Blue/default = BOOKED.
-     */
     private void setupRoomRowColors() {
         roomTable.setRowFactory(tv -> new TableRow<>() {
             @Override
@@ -198,8 +205,6 @@ public class BookingController {
         });
     }
 
-    // ── Combo & date setup ────────────────────────────────────────────────
-
     private void setupCombos() {
         if (addRoomTypeCombo != null) {
             addRoomTypeCombo.setItems(FXCollections.observableArrayList("SINGLE", "DOUBLE", "SUITE"));
@@ -215,8 +220,6 @@ public class BookingController {
         includeTaxCheck.setOnAction(e -> taxPercentField.setDisable(!includeTaxCheck.isSelected()));
         taxPercentField.setDisable(true);
     }
-
-    // ── Search bars ───────────────────────────────────────────────────────
 
     private void setupSearchBars() {
         if (customerSearchField != null) {
@@ -242,8 +245,6 @@ public class BookingController {
         }
     }
 
-    // ─────────────────────── CUSTOMER ACTIONS ────────────────────────────
-
     @FXML
     private void onRegisterCustomer() {
         String name    = customerNameField.getText().trim();
@@ -259,12 +260,23 @@ public class BookingController {
 
         Customer customer = new Customer(name, email, phone, address);
         Task<Integer> task = new Task<>() {
-            @Override protected Integer call() throws Exception { return customerService.addCustomer(customer); }
+            @Override protected Integer call() throws Exception {
+                int newId = customerService.addCustomer(customer);
+                if (newId > 0) {
+                    auditManager.log("CUSTOMER_ADDED", 0, name);
+                }
+                return newId;
+            }
         };
         task.setOnSucceeded(e -> {
             int id = task.getValue();
-            if (id > 0) { bookingCustomerIdField.setText(String.valueOf(id)); clearCustomerForm(); loadCustomers(); }
-            else showError("Unable to save customer.");
+            if (id > 0) {
+                bookingCustomerIdField.setText(String.valueOf(id));
+                clearCustomerForm();
+                loadCustomers();
+            } else {
+                showError("Unable to save customer.");
+            }
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
@@ -275,14 +287,17 @@ public class BookingController {
         Customer selected = customerTable.getSelectionModel().getSelectedItem();
         if (selected == null) { showError("Please select a customer from the table first."); return; }
         Task<Boolean> task = new Task<>() {
-            @Override protected Boolean call() throws Exception { return customerService.deleteCustomer(selected.getId()); }
+            @Override protected Boolean call() throws Exception {
+                return customerService.deleteCustomer(selected.getId());
+            }
         };
-        task.setOnSucceeded(e -> { if (task.getValue()) loadAllData(); else showError("Could not delete customer. They may have active bookings."); });
+        task.setOnSucceeded(e -> {
+            if (task.getValue()) loadAllData();
+            else showError("Could not delete customer. They may have active bookings.");
+        });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
-
-    // ─────────────────────── ROOM ACTIONS ────────────────────────────────
 
     @FXML
     private void onAddRoom() {
@@ -293,19 +308,32 @@ public class BookingController {
 
         if (isBlank(roomNumber) || isBlank(priceText)) { showError("Room number and price are required."); return; }
         double price;
-        try { price = Double.parseDouble(priceText); } catch (NumberFormatException ex) { showError("Price must be a valid number."); return; }
+        try { price = Double.parseDouble(priceText); }
+        catch (NumberFormatException ex) { showError("Price must be a valid number."); return; }
         if (price <= 0) { showError("Price must be greater than 0."); return; }
 
         final double finalPrice = price;
+        final String finalRoomType = roomType;
         Task<Boolean> task = new Task<>() {
-            @Override protected Boolean call() throws Exception { return roomService.addRoom(roomNumber, roomType, finalPrice); }
+            @Override protected Boolean call() throws Exception {
+                boolean added = roomService.addRoom(roomNumber, finalRoomType, finalPrice);
+                if (added) {
+                    int roomNum = 0;
+                    try { roomNum = Integer.parseInt(roomNumber); } catch (NumberFormatException ignored) {}
+                    auditManager.log("ROOM_ADDED", roomNum, "N/A");
+                }
+                return added;
+            }
         };
         task.setOnSucceeded(e -> {
             if (task.getValue()) {
-                addRoomNumberField.clear(); addRoomPriceField.clear();
+                addRoomNumberField.clear();
+                addRoomPriceField.clear();
                 if (addRoomTypeCombo != null) addRoomTypeCombo.getSelectionModel().selectFirst();
                 loadAllData();
-            } else showError("Unable to add room. Check if room number already exists.");
+            } else {
+                showError("Unable to add room. Check if room number already exists.");
+            }
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
@@ -316,14 +344,17 @@ public class BookingController {
         Room selected = roomTable.getSelectionModel().getSelectedItem();
         if (selected == null) { showError("Please select a room from the table first."); return; }
         Task<Boolean> task = new Task<>() {
-            @Override protected Boolean call() throws Exception { return roomService.deleteRoom(selected.getId()); }
+            @Override protected Boolean call() throws Exception {
+                return roomService.deleteRoom(selected.getId());
+            }
         };
-        task.setOnSucceeded(e -> { if (task.getValue()) loadAllData(); else showError("Could not delete room. It may be currently booked."); });
+        task.setOnSucceeded(e -> {
+            if (task.getValue()) loadAllData();
+            else showError("Could not delete room. It may be currently booked.");
+        });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
-
-    // ─────────────────────── BOOKING ACTIONS ─────────────────────────────
 
     @FXML
     private void onLoadAvailableRooms() { loadAvailableRoomsForBooking(); loadRooms(); }
@@ -332,7 +363,9 @@ public class BookingController {
         String selectedType = bookingRoomTypeCombo.getValue();
         if (selectedType == null) return;
         Task<List<Room>> task = new Task<>() {
-            @Override protected List<Room> call() throws Exception { return roomService.getAvailableRooms(selectedType); }
+            @Override protected List<Room> call() throws Exception {
+                return roomService.getAvailableRooms(selectedType);
+            }
         };
         task.setOnSucceeded(e -> {
             List<Room> rooms = task.getValue();
@@ -370,10 +403,12 @@ public class BookingController {
         int customerId;
         try { customerId = Integer.parseInt(bookingCustomerIdField.getText().trim()); }
         catch (NumberFormatException ex) { showError("Customer ID must be a valid number."); return; }
+
         Room selectedRoom = bookingRoomCombo.getValue();
         LocalDate checkIn  = checkInDatePicker.getValue();
         LocalDate checkOut = (checkOutDatePicker != null) ? checkOutDatePicker.getValue() : null;
         int days = computeDays();
+
         if (selectedRoom == null || checkIn == null || checkOut == null || days <= 0) {
             showError("Fill all booking fields correctly. Check-out must be after Check-in."); return;
         }
@@ -384,35 +419,58 @@ public class BookingController {
         double tax;
         try { tax = includeTax ? Double.parseDouble(taxPercentField.getText().trim()) : 0.0; }
         catch (NumberFormatException ex) { showError("Enter a valid tax percentage."); return; }
-        double total = BillingService.calculateTotal(selectedRoom.getPricePerDay(), days, includeTax, tax);
-        Booking booking = new Booking(customerId, selectedRoom.getId(), checkIn, checkOut, days, tax, total);
-        final int finalDays = days; final double finalTotal = total;
+
+        double total   = BillingService.calculateTotal(selectedRoom.getPricePerDay(), days, includeTax, tax);
+        double revenue = selectedRoom.getPricePerDay() * days;
+
+        Booking booking = new Booking(customerId, selectedRoom.getId(),
+                checkIn, checkOut, days, tax, total, revenue);
+
+        final int    finalDays   = days;
+        final double finalTotal  = total;
+        final int    finalCustId = customerId;
+        final Room   finalRoom   = selectedRoom;
+
         Task<Boolean> task = new Task<>() {
             @Override protected Boolean call() throws Exception {
                 boolean saved = bookingService.createBooking(booking);
-                if (saved) roomService.updateRoomStatus(selectedRoom.getId(), "BOOKED");
+                if (saved) {
+                    roomService.updateRoomStatus(finalRoom.getId(), "BOOKED");
+
+                    int roomNum = 0;
+                    try { roomNum = Integer.parseInt(finalRoom.getRoomNumber()); }
+                    catch (NumberFormatException ignored) {}
+
+                    String customerName = "Customer #" + finalCustId;
+                    try {
+                        List<com.hotel.management.model.Customer> allCusts =
+                                customerService.getAllCustomers();
+                        for (com.hotel.management.model.Customer c : allCusts) {
+                            if (c.getId() == finalCustId) {
+                                customerName = c.getFullName();
+                                break;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+
+                    auditManager.log("ROOM_BOOKED", roomNum, customerName);
+                }
                 return saved;
             }
         };
         task.setOnSucceeded(e -> {
             if (task.getValue()) {
-                bookingBillLabel.setText(String.format("Amount: Rs. %.2f  (%d day(s))", finalTotal, finalDays));
+                bookingBillLabel.setText(
+                        String.format("Amount: Rs. %.2f  (%d day(s))", finalTotal, finalDays));
                 loadAllData();
-            } else showError("Booking could not be saved.");
+            } else {
+                showError("Booking could not be saved.");
+            }
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
 
-    // ─────────────────────── CHECKOUT → CLEANING ──────────────────────────
-
-    /**
-     * Checkout flow:
-     * 1. Update room status to CLEANING in DB.
-     * 2. Delete the booking record.
-     * 3. Add room to Cleaning tab.
-     * 4. Submit to CleaningManager (max-3 threads).
-     */
     @FXML
     private void onCheckOut() {
         Booking selected = bookingTable.getSelectionModel().getSelectedItem();
@@ -420,63 +478,56 @@ public class BookingController {
 
         Task<Room> task = new Task<>() {
             @Override protected Room call() throws Exception {
-                // Mark room as CLEANING (not AVAILABLE yet)
+                bookingService.markCheckedOut(selected.getId());
+
                 roomService.updateRoomStatus(selected.getRoomId(), "CLEANING");
-                bookingService.deleteBooking(selected.getId());
-                return roomService.getRoomById(selected.getRoomId());
+                Room room = roomService.getRoomById(selected.getRoomId());
+
+                if (room != null) {
+                    int roomNum = 0;
+                    try { roomNum = Integer.parseInt(room.getRoomNumber()); }
+                    catch (NumberFormatException ignored) {}
+                    auditManager.log("ROOM_CHECKOUT", roomNum, "N/A");
+                }
+                return room;
             }
         };
         task.setOnSucceeded(e -> {
             Room room = task.getValue();
             if (room != null) {
-                loadAllData();                  // refresh all tables
-                addToCleaningTable(room);       // show in Cleaning tab
-                startCleaning(room);            // enqueue / start thread
+                loadAllData();
+                addToCleaningTable(room);
+                startCleaning(room);
             }
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
 
-    // ── Cleaning helpers ──────────────────────────────────────────────────
-
-    /**
-     * Adds the room to the Cleaning table and creates its ProgressBar.
-     * Must be called on the FX thread.
-     */
     private void addToCleaningTable(Room room) {
         ProgressBar bar = new ProgressBar(0);
         bar.setPrefWidth(160);
-        bar.setStyle("-fx-accent: #27ae60;");   // green fill
+        bar.setStyle("-fx-accent: #27ae60;");
         cleaningProgressBars.put(room.getId(), bar);
         cleaningRooms.add(room);
         cleaningTable.refresh();
         updateCleaningStatusLabel();
     }
 
-    /**
-     * Submits the room to the CleaningManager.
-     * The completion callback (run on FX thread by Platform.runLater) will:
-     *  • update DB: CLEANING → AVAILABLE
-     *  • remove row from Cleaning table
-     *  • refresh the Rooms table so the row turns green
-     */
     private void startCleaning(Room room) {
         ProgressBar bar = cleaningProgressBars.get(room.getId());
 
         Runnable onComplete = () -> {
-            // 1. Update DB on background thread
             executor.submit(() -> {
                 try {
                     roomService.updateRoomStatus(room.getId(), "AVAILABLE");
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                // 2. Update UI back on FX thread
                 Platform.runLater(() -> {
                     cleaningRooms.remove(room);
                     cleaningProgressBars.remove(room.getId());
-                    loadRooms();                // reload rooms → green row
+                    loadRooms();
                     loadAvailableRoomsForBooking();
                     updateCleaningStatusLabel();
                     System.out.println("[Controller] Room " + room.getRoomNumber() + " is now AVAILABLE.");
@@ -488,7 +539,6 @@ public class BookingController {
         updateCleaningStatusLabel();
     }
 
-    /** Updates the "Active cleaners: X / 3 · Queue: Y" label. */
     private void updateCleaningStatusLabel() {
         if (cleaningStatusLabel != null) {
             cleaningStatusLabel.setText(String.format(
@@ -499,14 +549,69 @@ public class BookingController {
         }
     }
 
-    // ─────────────────────── BILL POPUP ──────────────────────────────────
+    @FXML
+    private void onRevenueTabSelected(Event event) {
+        Tab tab = (Tab) event.getSource();
+        if (tab.isSelected()) {
+            refreshRevenueCharts();
+            refreshAuditTable();
+        }
+    }
+
+    @FXML
+    private void onRefreshRevenue() {
+        refreshRevenueCharts();
+        refreshAuditTable();
+    }
+
+    private void refreshRevenueCharts() {
+        Task<Map<String, Double>> task = new Task<>() {
+            @Override protected Map<String, Double> call() throws Exception {
+                return revenueManager.getRevenueByRoomType();
+            }
+        };
+        task.setOnSucceeded(e -> {
+            Map<String, Double> data = task.getValue();
+            updateChart(singleRevenueChart, "SINGLE", data.getOrDefault("SINGLE", 0.0));
+            updateChart(doubleRevenueChart, "DOUBLE", data.getOrDefault("DOUBLE", 0.0));
+            updateChart(suiteRevenueChart,  "SUITE",  data.getOrDefault("SUITE",  0.0));
+        });
+        task.setOnFailed(e -> System.err.println("[RevenueCharts] Failed: " + task.getException().getMessage()));
+        executor.submit(task);
+    }
+
+    private void updateChart(BarChart<String, Number> chart, String label, double revenue) {
+        chart.getData().clear();
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName("Revenue");
+        series.getData().add(new XYChart.Data<>(label, revenue));
+        chart.getData().add(series);
+        chart.setTitle(String.format("Rs. %.0f", revenue));
+    }
+
+    private void refreshAuditTable() {
+        Task<List<AuditRecord>> task = new Task<>() {
+            @Override protected List<AuditRecord> call() {
+                return auditManager.getAll();
+            }
+        };
+        task.setOnSucceeded(e -> {
+            ObservableList<AuditRecord> records =
+                    FXCollections.observableArrayList(task.getValue());
+            FXCollections.reverse(records);
+            auditRecords.setAll(records);
+        });
+        executor.submit(task);
+    }
 
     @FXML
     private void onShowBill() {
         Booking selected = bookingTable.getSelectionModel().getSelectedItem();
         if (selected == null) { showError("Please select a booking from the table first."); return; }
         Task<Room> task = new Task<>() {
-            @Override protected Room call() throws Exception { return roomService.getRoomById(selected.getRoomId()); }
+            @Override protected Room call() throws Exception {
+                return roomService.getRoomById(selected.getRoomId());
+            }
         };
         task.setOnSucceeded(e -> showBillPopup(selected, task.getValue()));
         task.setOnFailed(e -> showBillPopup(selected, null));
@@ -514,9 +619,9 @@ public class BookingController {
     }
 
     private void showBillPopup(Booking selected, Room room) {
-        String roomNo       = (room != null) ? room.getRoomNumber() : String.valueOf(selected.getRoomId());
-        String roomType     = (room != null) ? room.getRoomType() : "N/A";
-        double pricePerDay  = (room != null) ? room.getPricePerDay() : 0.0;
+        String roomNo      = (room != null) ? room.getRoomNumber() : String.valueOf(selected.getRoomId());
+        String roomType    = (room != null) ? room.getRoomType() : "N/A";
+        double pricePerDay = (room != null) ? room.getPricePerDay() : 0.0;
 
         StringBuilder bill = new StringBuilder();
         bill.append("==========================================\n");
@@ -530,7 +635,8 @@ public class BookingController {
         bill.append(String.format("  Check-out      :  %s%n",   selected.getCheckOutDate()));
         bill.append(String.format("  No. of Days    :  %d%n",   selected.getNumberOfDays()));
         bill.append(String.format("  Price / Day    :  Rs. %.2f%n", pricePerDay));
-        bill.append(String.format("  Subtotal       :  Rs. %.2f%n", pricePerDay * selected.getNumberOfDays()));
+        bill.append(String.format("  Base Revenue   :  Rs. %.2f%n",
+                pricePerDay * selected.getNumberOfDays()));
         bill.append(String.format("  Tax            :  %.2f%%%n",   selected.getTaxPercent()));
         bill.append("\n──────────────────────────────────────────\n");
         bill.append(String.format("  TOTAL AMOUNT   :  Rs. %.2f%n", selected.getTotalAmount()));
@@ -562,11 +668,11 @@ public class BookingController {
         popup.showAndWait();
     }
 
-    // ─────────────────────── REFRESH ─────────────────────────────────────
-
-    @FXML private void onRefreshAll() { loadAllData(); updateCleaningStatusLabel(); }
-
-    // ─────────────────────── DATA LOADERS ────────────────────────────────
+    @FXML
+    private void onRefreshAll() {
+        loadAllData();
+        updateCleaningStatusLabel();
+    }
 
     private void loadAllData() {
         loadCustomers();
@@ -578,10 +684,13 @@ public class BookingController {
 
     private void loadRoomTypeCombos() {
         Task<List<String>> task = new Task<>() {
-            @Override protected List<String> call() throws Exception { return roomService.getDistinctRoomTypes(); }
+            @Override protected List<String> call() throws Exception {
+                return roomService.getDistinctRoomTypes();
+            }
         };
         task.setOnSucceeded(e -> {
-            List<String> types = task.getValue().isEmpty() ? List.of("SINGLE", "DOUBLE", "SUITE") : task.getValue();
+            List<String> types = task.getValue().isEmpty()
+                    ? List.of("SINGLE", "DOUBLE", "SUITE") : task.getValue();
             String prev = bookingRoomTypeCombo.getValue();
             bookingRoomTypeCombo.setItems(FXCollections.observableArrayList(types));
             if (prev != null && types.contains(prev)) bookingRoomTypeCombo.setValue(prev);
@@ -596,7 +705,9 @@ public class BookingController {
 
     private void loadCustomers() {
         Task<List<Customer>> task = new Task<>() {
-            @Override protected List<Customer> call() throws Exception { return customerService.getAllCustomers(); }
+            @Override protected List<Customer> call() throws Exception {
+                return customerService.getAllCustomers();
+            }
         };
         task.setOnSucceeded(e -> {
             allCustomers.setAll(task.getValue());
@@ -608,7 +719,9 @@ public class BookingController {
 
     private void loadRooms() {
         Task<List<Room>> task = new Task<>() {
-            @Override protected List<Room> call() throws Exception { return roomService.getAllRooms(); }
+            @Override protected List<Room> call() throws Exception {
+                return roomService.getAllRooms();
+            }
         };
         task.setOnSucceeded(e -> {
             allRooms.setAll(task.getValue());
@@ -620,7 +733,9 @@ public class BookingController {
 
     private void loadBookings() {
         Task<List<Booking>> task = new Task<>() {
-            @Override protected List<Booking> call() throws Exception { return bookingService.getAllBookings(); }
+            @Override protected List<Booking> call() throws Exception {
+                return bookingService.getAllBookings();
+            }
         };
         task.setOnSucceeded(e -> {
             allBookings.setAll(task.getValue());
@@ -630,11 +745,11 @@ public class BookingController {
         executor.submit(task);
     }
 
-    // ─────────────────────── HELPERS ─────────────────────────────────────
-
     private void clearCustomerForm() {
-        customerNameField.clear(); customerEmailField.clear();
-        customerPhoneField.clear(); customerAddressField.clear();
+        customerNameField.clear();
+        customerEmailField.clear();
+        customerPhoneField.clear();
+        customerAddressField.clear();
     }
 
     private void showError(String message) {
@@ -663,8 +778,11 @@ public class BookingController {
             popup.setResizable(false);
             popup.showAndWait();
         };
-        if (Platform.isFxApplicationThread()) show.run(); else Platform.runLater(show);
+        if (Platform.isFxApplicationThread()) show.run();
+        else Platform.runLater(show);
     }
 
-    private boolean isBlank(String value) { return value == null || value.trim().isEmpty(); }
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
 }

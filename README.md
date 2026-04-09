@@ -5,7 +5,7 @@
 <h1 align="center">🏨 Hotel Management System</h1>
 
 <p align="center">
-  <b>A full-featured desktop hotel management application with room booking, customer management, and billing — built with JavaFX and MySQL.</b>
+  <b>A full-featured desktop hotel management application with customer management, room booking, billing, cleaning, revenue tracking, and audit logging — built with JavaFX and MySQL.</b>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 ## 📖 About
 
-**Hotel Management System** is a desktop application designed to streamline hotel operations. It allows staff to register customers, manage rooms, make bookings, generate detailed bills, and handle checkouts — all through a clean and modern JavaFX-based GUI backed by a MySQL database.
+**Hotel Management System** is a desktop application designed to streamline hotel operations. It lets staff register customers, manage rooms, make bookings, generate bills, handle cleaning after checkout, and review revenue and audit records through a JavaFX-based GUI backed by a MySQL database.
 
 ---
 
@@ -34,6 +34,8 @@
 | 🧾 **Billing & Tax** | Preview bills with optional tax calculation before confirming |
 | 🖨️ **Bill Popup** | View a formatted itemized hotel bill for any booking |
 | 🧹 **Room Cleaning** | Track and manage room cleaning tasks and status |
+| 📈 **Revenue Tracking** | View revenue charts by room type |
+| 🧾 **Audit Log** | Inspect serialized audit events for system activity |
 | 🔁 **Checkout** | Release booked rooms back to available status on checkout |
 | 🔍 **Live Filtering** | Filter available rooms dynamically by room type |
 | 💾 **MySQL Persistence** | All data persisted in a relational MySQL database |
@@ -78,44 +80,50 @@
 ```
 hotel-management-system/
 │
-├── pom.xml                          # Maven build config
+├── pom.xml
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── com/hotel/management/
-│   │   │       ├── MainApp.java                    # JavaFX entry point
-│   │   │       ├── module-info.java                # Java module descriptor
+│   │   │       ├── MainApp.java
+│   │   │       ├── module-info.java
 │   │   │       ├── cleaning/
-│   │   │       │   ├── CleaningManager.java        # Cleaning task management
-│   │   │       │   └── RoomCleaner.java            # Room cleaner entity
+│   │   │       │   ├── CleaningManager.java
+│   │   │       │   └── RoomCleaner.java
 │   │   │       ├── controller/
-│   │   │       │   └── BookingController.java      # Main UI controller
+│   │   │       │   └── BookingController.java
 │   │   │       ├── db/
-│   │   │       │   └── DatabaseConnection.java     # MySQL JDBC connection
+│   │   │       │   └── DatabaseConnection.java
 │   │   │       ├── model/
-│   │   │       │   ├── Booking.java                # Booking entity
-│   │   │       │   ├── Customer.java               # Customer entity
-│   │   │       │   └── Room.java                   # Room entity
+│   │   │       │   ├── AuditRecord.java
+│   │   │       │   ├── Booking.java
+│   │   │       │   ├── Customer.java
+│   │   │       │   └── Room.java
 │   │   │       └── service/
-│   │   │           ├── BillingService.java         # Bill & tax calculation
-│   │   │           ├── BookingService.java         # Booking CRUD
-│   │   │           ├── CustomerService.java        # Customer CRUD
-│   │   │           ├── RoomService.java            # Room CRUD
-│   │   │           └── Repository.java             # Data repository
+│   │   │           ├── AuditManager.java
+│   │   │           ├── BillingService.java
+│   │   │           ├── BookingService.java
+│   │   │           ├── CustomerService.java
+│   │   │           ├── RevenueManager.java
+│   │   │           ├── RoomService.java
+│   │   │           └── Repository.java
 │   │   └── resources/
-│   │       ├── schema.sql                          # Database schema & seed data
+│   │       ├── schema.sql
 │   │       └── com/hotel/management/
-│   │           ├── main-view.fxml                  # UI layout (FXML)
-│   │           ├── styles.css                      # Custom stylesheet
-│   │           ├── Logo.jpg                        # App logo
-│   │           └── Background_Image.jpg            # UI background
+│   │           ├── main-view.fxml
+│   │           ├── styles.css
+│   │           ├── Logo.jpg
+│   │           └── Background_Image.jpg
 │
-└── Required_images/                 # Screenshots & assets
+└── Required_images/
     ├── Logo.jpg
     ├── Background_Image.jpg
     ├── Bill.png
     ├── Book.png
     ├── Cleaning.png
+    ├── Revenue/
+    │   ├── Revenue.png
+    │   └── Audit.png
     ├── Manage_customers.png
     └── Managae_rooms.png
 ```
@@ -175,10 +183,10 @@ mvn javafx:run
 ## ⚙️ Database Schema
 
 ```sql
--- Rooms: room_id, room_number, room_type, price_per_day, status
--- Customers: customer_id, full_name, email, phone, address, created_at
--- Bookings: booking_id, customer_id, room_id, check_in_date,
---            check_out_date, number_of_days, tax_percent, total_amount
+Rooms: room_id, room_number, room_type, price_per_day, status
+Customers: customer_id, full_name, email, phone, address, created_at
+Bookings: booking_id, customer_id, room_id, check_in_date,
+           check_out_date, number_of_days, tax_percent, total_amount
 ```
 
 **Default seed rooms:**
@@ -215,6 +223,7 @@ mvn javafx:run
 5. **Confirm booking** — the room status is marked as `BOOKED` in the database.
 6. **View the bill** anytime from the Bookings table via the Show Bill button.
 7. **Checkout** to free the room and remove the booking record.
+8. **Open the Revenue & Audit tab** to review revenue charts and inspect audit events generated by bookings, room changes, and checkout actions.
 
 ---
 
@@ -222,15 +231,15 @@ mvn javafx:run
 
 > | Manage Customers | Manage Rooms |
 > |---|---|
-> | ![Customers](Required_images/Manage_customers.png) | ![Rooms](Required_images/Managae_rooms.png) |
+> | ![Customers](Required_images/manage_customers.png) | ![Rooms](Required_images/manage_rooms.png) |
 
 > | Booking & Bill | Bill Popup |
 > |---|---|
 > | ![Booking](Required_images/Book.png) | ![Bill](Required_images/Bill.png) |
 
-> | Room Cleaning |
-> |---|
-> | ![Cleaning](Required_images/Cleaning.png) |
+> | Room Cleaning | Revenue |
+> |---|---|
+> | ![Cleaning](Required_images/Cleaning.png) | ![Revenue](Required_images/Revenue.png) |
 
 ---
 

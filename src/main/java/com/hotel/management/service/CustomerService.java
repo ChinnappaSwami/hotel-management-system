@@ -10,39 +10,32 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Service class for Customer operations.
- * Implements the generic {@link Repository} interface with Customer as T and Integer as ID.
- */
 public class CustomerService implements Repository<Customer, Integer> {
 
-    // ── Repository<Customer, Integer> contract ────────────────────────────
+    private static final String CHECK_CHECKOUT_FLAG_EXISTS_SQL =
+        "SELECT COUNT(*) AS cnt "
+            + "FROM information_schema.COLUMNS "
+            + "WHERE TABLE_SCHEMA = DATABASE() "
+            + "AND TABLE_NAME = 'bookings' "
+            + "AND COLUMN_NAME = 'is_checked_out'";
 
-    /**
-     * Saves a new customer and returns the generated customer_id, or -1 on failure.
-     */
+    private static final String ADD_CHECKOUT_FLAG_SQL =
+        "ALTER TABLE bookings ADD COLUMN is_checked_out TINYINT(1) NOT NULL DEFAULT 0";
+
     @Override
     public Integer save(Customer customer) throws Exception {
         return addCustomer(customer);
     }
 
-    /**
-     * Returns all customers ordered by customer_id descending.
-     */
     @Override
     public List<Customer> findAll() throws Exception {
         return getAllCustomers();
     }
 
-    /**
-     * Deletes a customer by ID (only if no active bookings exist).
-     */
     @Override
     public boolean deleteById(Integer id) throws Exception {
         return deleteCustomer(id);
     }
-
-    // ── Concrete methods ──────────────────────────────────────────────────
 
     public int addCustomer(Customer customer) throws Exception {
         String sql = "INSERT INTO customers (full_name, email, phone, address) VALUES (?, ?, ?, ?)";
@@ -91,8 +84,9 @@ public class CustomerService implements Repository<Customer, Integer> {
     }
 
     public boolean deleteCustomer(int customerId) throws Exception {
-        // Only delete if customer has no active bookings
-        String checkSql = "SELECT COUNT(*) FROM bookings WHERE customer_id = ?";
+        ensureCheckoutFlagColumn();
+
+        String checkSql = "SELECT COUNT(*) FROM bookings WHERE customer_id = ? AND is_checked_out = 0";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
             checkStmt.setInt(1, customerId);
@@ -108,6 +102,24 @@ public class CustomerService implements Repository<Customer, Integer> {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             return stmt.executeUpdate() > 0;
+        }
+    }
+
+    private void ensureCheckoutFlagColumn() throws Exception {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement checkStmt = conn.prepareStatement(CHECK_CHECKOUT_FLAG_EXISTS_SQL);
+             ResultSet rs = checkStmt.executeQuery()) {
+
+            boolean exists = false;
+            if (rs.next()) {
+                exists = rs.getInt("cnt") > 0;
+            }
+
+            if (!exists) {
+                try (PreparedStatement addStmt = conn.prepareStatement(ADD_CHECKOUT_FLAG_SQL)) {
+                    addStmt.execute();
+                }
+            }
         }
     }
 }

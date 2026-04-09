@@ -15,7 +15,6 @@ public class MainApp extends Application {
 
         Scene scene = new Scene(root, 1100, 760);
 
-        // Load the CSS stylesheet
         String css = getClass().getResource("/com/hotel/management/styles.css").toExternalForm();
         scene.getStylesheets().add(css);
 

@@ -9,41 +9,36 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Service class for Booking operations.
- * Implements the generic {@link Repository} interface with Booking as T and Integer as ID.
- */
 public class BookingService implements Repository<Booking, Integer> {
 
-    // ── Repository<Booking, Integer> contract ─────────────────────────────
+    private static final String CHECK_CHECKOUT_FLAG_EXISTS_SQL =
+        "SELECT COUNT(*) AS cnt "
+            + "FROM information_schema.COLUMNS "
+            + "WHERE TABLE_SCHEMA = DATABASE() "
+            + "AND TABLE_NAME = 'bookings' "
+            + "AND COLUMN_NAME = 'is_checked_out'";
 
-    /**
-     * Saves a new booking. Returns 1 on success, -1 on failure.
-     */
+    private static final String ADD_CHECKOUT_FLAG_SQL =
+        "ALTER TABLE bookings ADD COLUMN is_checked_out TINYINT(1) NOT NULL DEFAULT 0";
+
     @Override
     public Integer save(Booking booking) throws Exception {
         return createBooking(booking) ? 1 : -1;
     }
 
-    /**
-     * Returns all bookings ordered by booking_id descending.
-     */
     @Override
     public List<Booking> findAll() throws Exception {
         return getAllBookings();
     }
 
-    /**
-     * Deletes a booking by its ID.
-     */
     @Override
     public boolean deleteById(Integer id) throws Exception {
         return deleteBooking(id);
     }
 
-    // ── Concrete methods ──────────────────────────────────────────────────
-
     public boolean createBooking(Booking booking) throws Exception {
+        ensureCheckoutFlagColumn();
+
         String sql = "INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -63,8 +58,13 @@ public class BookingService implements Repository<Booking, Integer> {
     }
 
     public List<Booking> getAllBookings() throws Exception {
+        ensureCheckoutFlagColumn();
+
         String sql = "SELECT booking_id, customer_id, room_id, check_in_date, check_out_date, "
-                + "number_of_days, tax_percent, total_amount FROM bookings ORDER BY booking_id DESC";
+                + "number_of_days, tax_percent, total_amount "
+                + "FROM bookings "
+                + "WHERE is_checked_out = 0 "
+                + "ORDER BY booking_id DESC";
         List<Booking> bookings = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -85,6 +85,17 @@ public class BookingService implements Repository<Booking, Integer> {
             }
         }
         return bookings;
+    }
+
+    public boolean markCheckedOut(int bookingId) throws Exception {
+        ensureCheckoutFlagColumn();
+
+        String sql = "UPDATE bookings SET is_checked_out = 1 WHERE booking_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, bookingId);
+            return stmt.executeUpdate() > 0;
+        }
     }
 
     public Booking getBookingById(int bookingId) throws Exception {
@@ -120,6 +131,24 @@ public class BookingService implements Repository<Booking, Integer> {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, bookingId);
             return stmt.executeUpdate() > 0;
+        }
+    }
+
+    private void ensureCheckoutFlagColumn() throws Exception {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement checkStmt = conn.prepareStatement(CHECK_CHECKOUT_FLAG_EXISTS_SQL);
+             ResultSet rs = checkStmt.executeQuery()) {
+
+            boolean exists = false;
+            if (rs.next()) {
+                exists = rs.getInt("cnt") > 0;
+            }
+
+            if (!exists) {
+                try (PreparedStatement addStmt = conn.prepareStatement(ADD_CHECKOUT_FLAG_SQL)) {
+                    addStmt.execute();
+                }
+            }
         }
     }
 }
