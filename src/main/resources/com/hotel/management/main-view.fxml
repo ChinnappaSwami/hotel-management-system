@@ -6,6 +6,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -253,6 +254,42 @@
                                 </VBox>
                             </children>
                         </HBox>
+                    </content>
+                </Tab>
+
+                <!-- ==================== TAB 4: CLEANING ==================== -->
+                <Tab text="Cleaning">
+                    <content>
+                        <VBox spacing="14.0" style="-fx-padding: 16;">
+
+                            <!-- Header row -->
+                            <HBox alignment="CENTER_LEFT" spacing="20.0">
+                                <Label styleClass="section-title" text="Room Cleaning Queue"/>
+                                <Label fx:id="cleaningStatusLabel"
+                                       text="Active cleaners: 0 / 3   ·   Queue: 0"
+                                       style="-fx-font-size: 13px; -fx-text-fill: #555; -fx-font-style: italic;"/>
+                            </HBox>
+
+                            <!-- Info banner -->
+                            <Label text="Rooms appear here after checkout and are cleaned by up to 3 parallel cleaner threads (≈ 30 s each)."
+                                   style="-fx-font-size: 12px; -fx-text-fill: #888; -fx-font-style: italic;"/>
+
+                            <!-- Cleaning table -->
+                            <TableView fx:id="cleaningTable" prefHeight="540.0" VBox.vgrow="ALWAYS"
+                                       style="-fx-background-color: #f9fffe; -fx-border-color: #a8d5ba; -fx-border-radius: 6; -fx-background-radius: 6;">
+                                <columns>
+                                    <TableColumn fx:id="cleaningRoomNumberCol" prefWidth="140.0" text="Room No"/>
+                                    <TableColumn fx:id="cleaningRoomTypeCol"   prefWidth="130.0" text="Type"/>
+                                    <TableColumn fx:id="cleaningStatusCol"     prefWidth="130.0" text="Status"/>
+                                    <TableColumn fx:id="cleaningProgressCol"   prefWidth="220.0" text="Cleaning Progress"/>
+                                </columns>
+                                <placeholder>
+                                    <Label text="✅  No rooms are currently being cleaned."
+                                           style="-fx-font-size: 14px; -fx-text-fill: #27ae60; -fx-font-style: italic;"/>
+                                </placeholder>
+                            </TableView>
+
+                        </VBox>
                     </content>
                 </Tab>
 

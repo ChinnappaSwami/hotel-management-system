@@ -32,9 +32,61 @@ CREATE TABLE IF NOT EXISTS bookings (
     CONSTRAINT fk_bookings_room FOREIGN KEY (room_id) REFERENCES rooms(room_id)
 );
 
+-- ─── Rooms ────────────────────────────────────────────────────────────────────
 INSERT INTO rooms (room_number, room_type, price_per_day, status) VALUES
+-- Floor 1 – Singles
 ('101', 'SINGLE', 1500.00, 'AVAILABLE'),
 ('102', 'SINGLE', 1500.00, 'AVAILABLE'),
+('103', 'SINGLE', 1500.00, 'AVAILABLE'),
+('104', 'SINGLE', 1600.00, 'AVAILABLE'),
+('105', 'SINGLE', 1600.00, 'AVAILABLE'),
+-- Floor 2 – Doubles
 ('201', 'DOUBLE', 2500.00, 'AVAILABLE'),
 ('202', 'DOUBLE', 2500.00, 'AVAILABLE'),
-('301', 'SUITE', 4000.00, 'AVAILABLE');
+('203', 'DOUBLE', 2700.00, 'AVAILABLE'),
+('204', 'DOUBLE', 2700.00, 'AVAILABLE'),
+('205', 'DOUBLE', 2800.00, 'AVAILABLE'),
+-- Floor 3 – Suites
+('301', 'SUITE',  4000.00, 'AVAILABLE'),
+('302', 'SUITE',  4000.00, 'AVAILABLE'),
+('303', 'SUITE',  4500.00, 'AVAILABLE'),
+('304', 'SUITE',  4500.00, 'AVAILABLE'),
+('305', 'SUITE',  5000.00, 'AVAILABLE');
+
+-- ─── Customers ────────────────────────────────────────────────────────────────
+INSERT INTO customers (full_name, email, phone, address) VALUES
+('Aarav Sharma',   'aarav.sharma@gmail.com',   '9876543210', '12 MG Road, Mumbai, Maharashtra'),
+('Priya Menon',    'priya.menon@gmail.com',    '9123456780', '45 Anna Salai, Chennai, Tamil Nadu'),
+('Rohan Kapoor',   'rohan.kapoor@mail.com',    '9988776655', '7 Connaught Place, New Delhi'),
+('Sneha Iyer',     'sneha.iyer@mail.com',      '8899001122', '23 Brigade Road, Bengaluru, Karnataka'),
+('Vikram Patel',   'vikram.patel@gmail.com',   '9001234567', '8 Ashram Road, Ahmedabad, Gujarat');
+
+-- ─── Bookings ─────────────────────────────────────────────────────────────────
+-- Aarav Sharma  → Room 101 (Single, 3 days, 18% tax)
+INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) VALUES
+(1, 1,  '2026-04-01', '2026-04-04', 3,  18.00,  5310.00);
+
+-- Priya Menon   → Room 202 (Double, 5 days, 18% tax)
+INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) VALUES
+(2, 7,  '2026-04-02', '2026-04-07', 5,  18.00, 14750.00);
+
+-- Rohan Kapoor  → Room 301 (Suite,  2 days, 18% tax)
+INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) VALUES
+(3, 11, '2026-04-03', '2026-04-05', 2,  18.00,  9440.00);
+
+-- Sneha Iyer    → Room 103 (Single, 4 days, 12% tax)
+INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) VALUES
+(4, 3,  '2026-04-05', '2026-04-09', 4,  12.00,  6720.00);
+
+-- Vikram Patel  → Room 203 (Double, 3 days, 18% tax)
+INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) VALUES
+(5, 8,  '2026-04-06', '2026-04-09', 3,  18.00,  9558.00);
+
+-- Aarav Sharma  → Room 302 (Suite, 7 days, 18% tax) – future booking
+INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) VALUES
+(1, 12, '2026-04-15', '2026-04-22', 7,  18.00, 33040.00);
+
+-- Priya Menon   → Room 104 (Single, 2 days, 12% tax) – future booking
+INSERT INTO bookings (customer_id, room_id, check_in_date, check_out_date, number_of_days, tax_percent, total_amount) VALUES
+(2, 4,  '2026-04-20', '2026-04-22', 2,  12.00,  3584.00);
+

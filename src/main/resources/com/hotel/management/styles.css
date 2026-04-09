@@ -243,3 +243,66 @@
 .scroll-bar .thumb:hover {
     -fx-background-color: #7bc49a;
 }
+
+/* ===== ROOM TABLE ROW COLOURS (by status) ===== */
+
+/* AVAILABLE → soft green */
+.row-available {
+    -fx-background-color: #d4edda;
+}
+.row-available:odd {
+    -fx-background-color: #c3e6cb;
+}
+.row-available:selected {
+    -fx-background-color: #a3d9b1;
+}
+.row-available .text {
+    -fx-fill: #155724;
+}
+
+/* CLEANING → soft amber/orange */
+.row-cleaning {
+    -fx-background-color: #fff3cd;
+}
+.row-cleaning:odd {
+    -fx-background-color: #ffeaa0;
+}
+.row-cleaning:selected {
+    -fx-background-color: #ffd166;
+}
+.row-cleaning .text {
+    -fx-fill: #856404;
+}
+
+/* BOOKED → soft blue */
+.row-booked {
+    -fx-background-color: #d1ecf1;
+}
+.row-booked:odd {
+    -fx-background-color: #bee5eb;
+}
+.row-booked:selected {
+    -fx-background-color: #9fd8e4;
+}
+.row-booked .text {
+    -fx-fill: #0c5460;
+}
+
+/* ===== CLEANING PROGRESS BAR ===== */
+
+/* Green track fill */
+.progress-bar > .bar {
+    -fx-background-color: linear-gradient(to right, #27ae60, #2ecc71);
+    -fx-background-radius: 4;
+}
+
+/* Light grey track background */
+.progress-bar > .track {
+    -fx-background-color: #e0e0e0;
+    -fx-background-radius: 4;
+}
+
+/* Animated indeterminate bar */
+.progress-bar:indeterminate > .bar {
+    -fx-background-color: linear-gradient(to right, #f39c12, #e67e22);
+}

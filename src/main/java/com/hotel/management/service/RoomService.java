@@ -44,6 +44,23 @@ public class RoomService {
         return rooms;
     }
 
+    public List<Room> getRoomsByStatus(String status) throws Exception {
+        String sql = "SELECT room_id, room_number, room_type, price_per_day, status "
+                + "FROM rooms WHERE status = ? ORDER BY room_number";
+        List<Room> rooms = new ArrayList<>();
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    rooms.add(mapRoom(rs));
+                }
+            }
+        }
+        return rooms;
+    }
+
     public Room getRoomById(int roomId) throws Exception {
         String sql = "SELECT room_id, room_number, room_type, price_per_day, status FROM rooms WHERE room_id = ?";
 

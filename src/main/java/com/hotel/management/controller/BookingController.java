@@ -1,5 +1,6 @@
 package com.hotel.management.controller;
 
+import com.hotel.management.cleaning.CleaningManager;
 import com.hotel.management.model.Booking;
 import com.hotel.management.model.Customer;
 import com.hotel.management.model.Room;
@@ -16,14 +17,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -33,107 +27,86 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BookingController {
 
     // ── Customer tab ──────────────────────────────────────────────────────
-    @FXML
-    private TextField customerNameField;
-    @FXML
-    private TextField customerEmailField;
-    @FXML
-    private TextField customerPhoneField;
-    @FXML
-    private TextField customerAddressField;
-    @FXML
-    private TextField customerSearchField; // NEW: search bar
-    @FXML
-    private TableView<Customer> customerTable;
-    @FXML
-    private TableColumn<Customer, Integer> customerIdCol;
-    @FXML
-    private TableColumn<Customer, String> customerNameCol;
-    @FXML
-    private TableColumn<Customer, String> customerEmailCol;
-    @FXML
-    private TableColumn<Customer, String> customerPhoneCol;
+    @FXML private TextField customerNameField;
+    @FXML private TextField customerEmailField;
+    @FXML private TextField customerPhoneField;
+    @FXML private TextField customerAddressField;
+    @FXML private TextField customerSearchField;
+    @FXML private TableView<Customer> customerTable;
+    @FXML private TableColumn<Customer, Integer> customerIdCol;
+    @FXML private TableColumn<Customer, String>  customerNameCol;
+    @FXML private TableColumn<Customer, String>  customerEmailCol;
+    @FXML private TableColumn<Customer, String>  customerPhoneCol;
 
     // ── Room tab ──────────────────────────────────────────────────────────
-    @FXML
-    private TextField addRoomNumberField;
-    @FXML
-    private ComboBox<String> addRoomTypeCombo; // Changed: was TextField
-    @FXML
-    private TextField addRoomPriceField;
-    @FXML
-    private TextField roomSearchField; // NEW: search bar
-    @FXML
-    private TableView<Room> roomTable;
-    @FXML
-    private TableColumn<Room, Integer> roomIdCol;
-    @FXML
-    private TableColumn<Room, String> roomNumberCol;
-    @FXML
-    private TableColumn<Room, String> roomTypeCol;
-    @FXML
-    private TableColumn<Room, Double> roomPriceCol;
-    @FXML
-    private TableColumn<Room, String> roomStatusCol;
+    @FXML private TextField addRoomNumberField;
+    @FXML private ComboBox<String> addRoomTypeCombo;
+    @FXML private TextField addRoomPriceField;
+    @FXML private TextField roomSearchField;
+    @FXML private TableView<Room> roomTable;
+    @FXML private TableColumn<Room, Integer> roomIdCol;
+    @FXML private TableColumn<Room, String>  roomNumberCol;
+    @FXML private TableColumn<Room, String>  roomTypeCol;
+    @FXML private TableColumn<Room, Double>  roomPriceCol;
+    @FXML private TableColumn<Room, String>  roomStatusCol;
 
     // ── Book and Bill tab ─────────────────────────────────────────────────
-    @FXML
-    private TextField bookingCustomerIdField;
-    @FXML
-    private ComboBox<String> bookingRoomTypeCombo;
-    @FXML
-    private ComboBox<Room> bookingRoomCombo;
-    @FXML
-    private DatePicker checkInDatePicker;
-    @FXML
-    private DatePicker checkOutDatePicker; // Changed: replaces daysField
-    @FXML
-    private CheckBox includeTaxCheck;
-    @FXML
-    private TextField taxPercentField;
-    @FXML
-    private Label bookingBillLabel;
-    @FXML
-    private TextField bookingSearchField; // NEW: search bar
-    @FXML
-    private TableView<Booking> bookingTable;
-    @FXML
-    private TableColumn<Booking, Integer> bookingIdCol;
-    @FXML
-    private TableColumn<Booking, Integer> bookingCustomerCol;
-    @FXML
-    private TableColumn<Booking, Integer> bookingRoomCol;
-    @FXML
-    private TableColumn<Booking, Integer> bookingDaysCol;
-    @FXML
-    private TableColumn<Booking, Double> bookingTotalCol;
+    @FXML private TextField      bookingCustomerIdField;
+    @FXML private ComboBox<String> bookingRoomTypeCombo;
+    @FXML private ComboBox<Room>   bookingRoomCombo;
+    @FXML private DatePicker       checkInDatePicker;
+    @FXML private DatePicker       checkOutDatePicker;
+    @FXML private CheckBox         includeTaxCheck;
+    @FXML private TextField        taxPercentField;
+    @FXML private Label            bookingBillLabel;
+    @FXML private TextField        bookingSearchField;
+    @FXML private TableView<Booking> bookingTable;
+    @FXML private TableColumn<Booking, Integer> bookingIdCol;
+    @FXML private TableColumn<Booking, Integer> bookingCustomerCol;
+    @FXML private TableColumn<Booking, Integer> bookingRoomCol;
+    @FXML private TableColumn<Booking, Integer> bookingDaysCol;
+    @FXML private TableColumn<Booking, Double>  bookingTotalCol;
+
+    // ── Cleaning tab ──────────────────────────────────────────────────────
+    @FXML private TableView<Room>               cleaningTable;
+    @FXML private TableColumn<Room, String>     cleaningRoomNumberCol;
+    @FXML private TableColumn<Room, String>     cleaningRoomTypeCol;
+    @FXML private TableColumn<Room, String>     cleaningStatusCol;
+    @FXML private TableColumn<Room, Void>       cleaningProgressCol;
+    @FXML private Label                         cleaningStatusLabel;
 
     // ── Refresh button ────────────────────────────────────────────────────
-    @FXML
-    private Button refreshBtn;
+    @FXML private Button refreshBtn;
 
     // ── Services ──────────────────────────────────────────────────────────
     private final CustomerService customerService = new CustomerService();
-    private final RoomService roomService = new RoomService();
-    private final BookingService bookingService = new BookingService();
+    private final RoomService     roomService     = new RoomService();
+    private final BookingService  bookingService  = new BookingService();
 
-    // ── Backing lists (for search filtering) ─────────────────────────────
-    private ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
-    private ObservableList<Room> allRooms = FXCollections.observableArrayList();
-    private ObservableList<Booking> allBookings = FXCollections.observableArrayList();
+    // ── Backing observable lists ─────────────────────────────────────────
+    private final ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
+    private final ObservableList<Room>     allRooms     = FXCollections.observableArrayList();
+    private final ObservableList<Booking>  allBookings  = FXCollections.observableArrayList();
+    private final ObservableList<Room>     cleaningRooms = FXCollections.observableArrayList();
 
-    // ── Thread pool for background DB tasks ─────────────────────────────
-    // Uses a cached thread pool so we don't create more threads than needed
+    // ── Cleaning infrastructure ───────────────────────────────────────────
+    /** One ProgressBar per room being cleaned, keyed by room.getId(). */
+    private final Map<Integer, ProgressBar> cleaningProgressBars = new HashMap<>();
+    private final CleaningManager cleaningManager = new CleaningManager();
+
+    // ── Background DB thread pool ─────────────────────────────────────────
     private final ExecutorService executor = Executors.newCachedThreadPool(r -> {
         Thread t = new Thread(r, "HotelMgmt-Worker");
-        t.setDaemon(true); // daemon threads auto-stop when JVM exits
+        t.setDaemon(true);
         return t;
     });
 
@@ -144,8 +117,12 @@ public class BookingController {
         setupTables();
         setupCombos();
         setupSearchBars();
+        setupCleaningTable();
+        setupRoomRowColors();
         loadAllData();
     }
+
+    // ── Table column bindings ─────────────────────────────────────────────
 
     private void setupTables() {
         customerIdCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -166,66 +143,102 @@ public class BookingController {
         bookingTotalCol.setCellValueFactory(new PropertyValueFactory<>("totalAmount"));
     }
 
+    // ── Cleaning tab setup ────────────────────────────────────────────────
+
+    /**
+     * Wires up the Cleaning table.  The Progress column uses a custom
+     * TableCell that embeds the ProgressBar stored in cleaningProgressBars.
+     */
+    private void setupCleaningTable() {
+        cleaningRoomNumberCol.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
+        cleaningRoomTypeCol.setCellValueFactory(new PropertyValueFactory<>("roomType"));
+        cleaningStatusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        // Progress column – embedded ProgressBar looked up by room id
+        cleaningProgressCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setGraphic(null);
+                } else {
+                    Room room = getTableRow().getItem();
+                    ProgressBar bar = cleaningProgressBars.get(room.getId());
+                    if (bar != null) {
+                        bar.setPrefWidth(160);
+                        setGraphic(bar);
+                    } else {
+                        setGraphic(null);
+                    }
+                }
+            }
+        });
+
+        cleaningTable.setItems(cleaningRooms);
+    }
+
+    /**
+     * Applies CSS row-colour classes to the Room table based on status.
+     * Green = AVAILABLE, Amber = CLEANING, Blue/default = BOOKED.
+     */
+    private void setupRoomRowColors() {
+        roomTable.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(Room room, boolean empty) {
+                super.updateItem(room, empty);
+                getStyleClass().removeAll("row-available", "row-cleaning", "row-booked");
+                if (!empty && room != null) {
+                    switch (room.getStatus().toUpperCase()) {
+                        case "AVAILABLE" -> getStyleClass().add("row-available");
+                        case "CLEANING"  -> getStyleClass().add("row-cleaning");
+                        case "BOOKED"    -> getStyleClass().add("row-booked");
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Combo & date setup ────────────────────────────────────────────────
+
     private void setupCombos() {
-        // Populate the room-type dropdown in the Add Room form
         if (addRoomTypeCombo != null) {
             addRoomTypeCombo.setItems(FXCollections.observableArrayList("SINGLE", "DOUBLE", "SUITE"));
             addRoomTypeCombo.getSelectionModel().selectFirst();
         }
-
         loadRoomTypeCombos();
-
         checkInDatePicker.setValue(LocalDate.now());
         if (checkOutDatePicker != null) {
             checkOutDatePicker.setValue(LocalDate.now().plusDays(1));
         }
         taxPercentField.setText("12");
-
         bookingRoomTypeCombo.setOnAction(e -> loadAvailableRoomsForBooking());
         includeTaxCheck.setOnAction(e -> taxPercentField.setDisable(!includeTaxCheck.isSelected()));
         taxPercentField.setDisable(true);
     }
 
-    /** Wire up real-time search filtering on all three tables. */
+    // ── Search bars ───────────────────────────────────────────────────────
+
     private void setupSearchBars() {
-        // ── Customer search by Name ───────────────────────────────────────
         if (customerSearchField != null) {
-            FilteredList<Customer> filteredCustomers = new FilteredList<>(allCustomers, c -> true);
-            customerSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
-                filteredCustomers.setPredicate(cust -> {
-                    if (newVal == null || newVal.trim().isEmpty())
-                        return true;
-                    String lower = newVal.toLowerCase();
-                    return cust.getFullName().toLowerCase().contains(lower);
-                });
-            });
-            customerTable.setItems(filteredCustomers);
+            FilteredList<Customer> filtered = new FilteredList<>(allCustomers, c -> true);
+            customerSearchField.textProperty().addListener((obs, o, n) ->
+                    filtered.setPredicate(cust ->
+                            isBlank(n) || cust.getFullName().toLowerCase().contains(n.toLowerCase())));
+            customerTable.setItems(filtered);
         }
-
-        // ── Room search by Room Number ────────────────────────────────────
         if (roomSearchField != null) {
-            FilteredList<Room> filteredRooms = new FilteredList<>(allRooms, r -> true);
-            roomSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
-                filteredRooms.setPredicate(room -> {
-                    if (newVal == null || newVal.trim().isEmpty())
-                        return true;
-                    return room.getRoomNumber().toLowerCase().contains(newVal.toLowerCase());
-                });
-            });
-            roomTable.setItems(filteredRooms);
+            FilteredList<Room> filtered = new FilteredList<>(allRooms, r -> true);
+            roomSearchField.textProperty().addListener((obs, o, n) ->
+                    filtered.setPredicate(room ->
+                            isBlank(n) || room.getRoomNumber().toLowerCase().contains(n.toLowerCase())));
+            roomTable.setItems(filtered);
         }
-
-        // ── Booking search by Booking ID ──────────────────────────────────
         if (bookingSearchField != null) {
-            FilteredList<Booking> filteredBookings = new FilteredList<>(allBookings, b -> true);
-            bookingSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
-                filteredBookings.setPredicate(booking -> {
-                    if (newVal == null || newVal.trim().isEmpty())
-                        return true;
-                    return String.valueOf(booking.getId()).contains(newVal.trim());
-                });
-            });
-            bookingTable.setItems(filteredBookings);
+            FilteredList<Booking> filtered = new FilteredList<>(allBookings, b -> true);
+            bookingSearchField.textProperty().addListener((obs, o, n) ->
+                    filtered.setPredicate(booking ->
+                            isBlank(n) || String.valueOf(booking.getId()).contains(n.trim())));
+            bookingTable.setItems(filtered);
         }
     }
 
@@ -233,45 +246,25 @@ public class BookingController {
 
     @FXML
     private void onRegisterCustomer() {
-        String name = customerNameField.getText().trim();
-        String email = customerEmailField.getText().trim();
-        String phone = customerPhoneField.getText().trim();
+        String name    = customerNameField.getText().trim();
+        String email   = customerEmailField.getText().trim();
+        String phone   = customerPhoneField.getText().trim();
         String address = customerAddressField.getText().trim();
 
-        // Validation ──────────────────────────────────────────────────────
-        if (isBlank(name) || isBlank(phone)) {
-            showError("Name and phone are required.");
-            return;
-        }
-        // Email constraint: must contain '@' and end with '.com'
+        if (isBlank(name) || isBlank(phone)) { showError("Name and phone are required."); return; }
         if (!isBlank(email) && (!email.contains("@") || !email.endsWith(".com"))) {
-            showError("Email must contain '@' and end with '.com'  (e.g. user@mail.com).");
-            return;
+            showError("Email must contain '@' and end with '.com'  (e.g. user@mail.com)."); return;
         }
-        // Phone constraint: exactly 10 digits
-        if (!phone.matches("\\d{10}")) {
-            showError("Phone number must be exactly 10 digits.");
-            return;
-        }
+        if (!phone.matches("\\d{10}")) { showError("Phone number must be exactly 10 digits."); return; }
 
         Customer customer = new Customer(name, email, phone, address);
-
-        // Multithreaded save ──────────────────────────────────────────────
         Task<Integer> task = new Task<>() {
-            @Override
-            protected Integer call() throws Exception {
-                return customerService.addCustomer(customer);
-            }
+            @Override protected Integer call() throws Exception { return customerService.addCustomer(customer); }
         };
         task.setOnSucceeded(e -> {
-            int customerId = task.getValue();
-            if (customerId > 0) {
-                bookingCustomerIdField.setText(String.valueOf(customerId));
-                clearCustomerForm();
-                loadCustomers();
-            } else {
-                showError("Unable to save customer.");
-            }
+            int id = task.getValue();
+            if (id > 0) { bookingCustomerIdField.setText(String.valueOf(id)); clearCustomerForm(); loadCustomers(); }
+            else showError("Unable to save customer.");
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
@@ -280,23 +273,11 @@ public class BookingController {
     @FXML
     private void onDeleteCustomer() {
         Customer selected = customerTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showError("Please select a customer from the table first.");
-            return;
-        }
-
+        if (selected == null) { showError("Please select a customer from the table first."); return; }
         Task<Boolean> task = new Task<>() {
-            @Override
-            protected Boolean call() throws Exception {
-                return customerService.deleteCustomer(selected.getId());
-            }
+            @Override protected Boolean call() throws Exception { return customerService.deleteCustomer(selected.getId()); }
         };
-        task.setOnSucceeded(e -> {
-            if (task.getValue())
-                loadAllData();
-            else
-                showError("Could not delete customer. They may have active bookings.");
-        });
+        task.setOnSucceeded(e -> { if (task.getValue()) loadAllData(); else showError("Could not delete customer. They may have active bookings."); });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
@@ -306,46 +287,25 @@ public class BookingController {
     @FXML
     private void onAddRoom() {
         String roomNumber = addRoomNumberField.getText().trim();
-        // Get type from ComboBox if present, else fall back gracefully
-        String roomType = (addRoomTypeCombo != null && addRoomTypeCombo.getValue() != null)
-                ? addRoomTypeCombo.getValue().toUpperCase()
-                : "SINGLE";
-        String priceText = addRoomPriceField.getText().trim();
+        String roomType   = (addRoomTypeCombo != null && addRoomTypeCombo.getValue() != null)
+                ? addRoomTypeCombo.getValue().toUpperCase() : "SINGLE";
+        String priceText  = addRoomPriceField.getText().trim();
 
-        if (isBlank(roomNumber) || isBlank(priceText)) {
-            showError("Room number and price are required.");
-            return;
-        }
-
+        if (isBlank(roomNumber) || isBlank(priceText)) { showError("Room number and price are required."); return; }
         double price;
-        try {
-            price = Double.parseDouble(priceText);
-        } catch (NumberFormatException ex) {
-            showError("Price must be a valid number.");
-            return;
-        }
-        if (price <= 0) {
-            showError("Price must be greater than 0.");
-            return;
-        }
+        try { price = Double.parseDouble(priceText); } catch (NumberFormatException ex) { showError("Price must be a valid number."); return; }
+        if (price <= 0) { showError("Price must be greater than 0."); return; }
 
         final double finalPrice = price;
         Task<Boolean> task = new Task<>() {
-            @Override
-            protected Boolean call() throws Exception {
-                return roomService.addRoom(roomNumber, roomType, finalPrice);
-            }
+            @Override protected Boolean call() throws Exception { return roomService.addRoom(roomNumber, roomType, finalPrice); }
         };
         task.setOnSucceeded(e -> {
             if (task.getValue()) {
-                addRoomNumberField.clear();
-                addRoomPriceField.clear();
-                if (addRoomTypeCombo != null)
-                    addRoomTypeCombo.getSelectionModel().selectFirst();
+                addRoomNumberField.clear(); addRoomPriceField.clear();
+                if (addRoomTypeCombo != null) addRoomTypeCombo.getSelectionModel().selectFirst();
                 loadAllData();
-            } else {
-                showError("Unable to add room. Check if room number already exists.");
-            }
+            } else showError("Unable to add room. Check if room number already exists.");
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
@@ -354,23 +314,11 @@ public class BookingController {
     @FXML
     private void onDeleteRoom() {
         Room selected = roomTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showError("Please select a room from the table first.");
-            return;
-        }
-
+        if (selected == null) { showError("Please select a room from the table first."); return; }
         Task<Boolean> task = new Task<>() {
-            @Override
-            protected Boolean call() throws Exception {
-                return roomService.deleteRoom(selected.getId());
-            }
+            @Override protected Boolean call() throws Exception { return roomService.deleteRoom(selected.getId()); }
         };
-        task.setOnSucceeded(e -> {
-            if (task.getValue())
-                loadAllData();
-            else
-                showError("Could not delete room. It may be currently booked.");
-        });
+        task.setOnSucceeded(e -> { if (task.getValue()) loadAllData(); else showError("Could not delete room. It may be currently booked."); });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
@@ -378,41 +326,27 @@ public class BookingController {
     // ─────────────────────── BOOKING ACTIONS ─────────────────────────────
 
     @FXML
-    private void onLoadAvailableRooms() {
-        loadAvailableRoomsForBooking();
-        loadRooms();
-    }
+    private void onLoadAvailableRooms() { loadAvailableRoomsForBooking(); loadRooms(); }
 
     private void loadAvailableRoomsForBooking() {
         String selectedType = bookingRoomTypeCombo.getValue();
-        if (selectedType == null)
-            return;
-
+        if (selectedType == null) return;
         Task<List<Room>> task = new Task<>() {
-            @Override
-            protected List<Room> call() throws Exception {
-                return roomService.getAvailableRooms(selectedType);
-            }
+            @Override protected List<Room> call() throws Exception { return roomService.getAvailableRooms(selectedType); }
         };
         task.setOnSucceeded(e -> {
             List<Room> rooms = task.getValue();
             bookingRoomCombo.setItems(FXCollections.observableArrayList(rooms));
-            if (!rooms.isEmpty())
-                bookingRoomCombo.getSelectionModel().selectFirst();
+            if (!rooms.isEmpty()) bookingRoomCombo.getSelectionModel().selectFirst();
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
 
-    /**
-     * Computes number of days from check-in to check-out date. Returns -1 if
-     * invalid.
-     */
     private int computeDays() {
-        LocalDate checkIn = checkInDatePicker.getValue();
+        LocalDate checkIn  = checkInDatePicker.getValue();
         LocalDate checkOut = (checkOutDatePicker != null) ? checkOutDatePicker.getValue() : null;
-        if (checkIn == null || checkOut == null)
-            return -1;
+        if (checkIn == null || checkOut == null) return -1;
         long days = ChronoUnit.DAYS.between(checkIn, checkOut);
         return (days > 0) ? (int) days : -1;
     }
@@ -420,25 +354,13 @@ public class BookingController {
     @FXML
     private void onPreviewBookingBill() {
         Room selectedRoom = bookingRoomCombo.getValue();
-        if (selectedRoom == null) {
-            showError("Select an available room first.");
-            return;
-        }
+        if (selectedRoom == null) { showError("Select an available room first."); return; }
         int days = computeDays();
-        if (days <= 0) {
-            showError("Check-out date must be after Check-in date.");
-            return;
-        }
-
+        if (days <= 0) { showError("Check-out date must be after Check-in date."); return; }
         boolean includeTax = includeTaxCheck.isSelected();
         double tax;
-        try {
-            tax = includeTax ? Double.parseDouble(taxPercentField.getText().trim()) : 0.0;
-        } catch (NumberFormatException ex) {
-            showError("Enter a valid tax percentage.");
-            return;
-        }
-
+        try { tax = includeTax ? Double.parseDouble(taxPercentField.getText().trim()) : 0.0; }
+        catch (NumberFormatException ex) { showError("Enter a valid tax percentage."); return; }
         double total = BillingService.calculateTotal(selectedRoom.getPricePerDay(), days, includeTax, tax);
         bookingBillLabel.setText(String.format("Amount: Rs. %.2f  (%d day(s))", total, days));
     }
@@ -446,47 +368,29 @@ public class BookingController {
     @FXML
     private void onBookRoom() {
         int customerId;
-        try {
-            customerId = Integer.parseInt(bookingCustomerIdField.getText().trim());
-        } catch (NumberFormatException ex) {
-            showError("Customer ID must be a valid number.");
-            return;
-        }
-
+        try { customerId = Integer.parseInt(bookingCustomerIdField.getText().trim()); }
+        catch (NumberFormatException ex) { showError("Customer ID must be a valid number."); return; }
         Room selectedRoom = bookingRoomCombo.getValue();
-        LocalDate checkIn = checkInDatePicker.getValue();
+        LocalDate checkIn  = checkInDatePicker.getValue();
         LocalDate checkOut = (checkOutDatePicker != null) ? checkOutDatePicker.getValue() : null;
         int days = computeDays();
-
         if (selectedRoom == null || checkIn == null || checkOut == null || days <= 0) {
-            showError("Fill all booking fields correctly. Check-out must be after Check-in.");
-            return;
+            showError("Fill all booking fields correctly. Check-out must be after Check-in."); return;
         }
         if (!"AVAILABLE".equalsIgnoreCase(selectedRoom.getStatus())) {
-            showError("Selected room is not available.");
-            return;
+            showError("Selected room is not available."); return;
         }
-
         boolean includeTax = includeTaxCheck.isSelected();
         double tax;
-        try {
-            tax = includeTax ? Double.parseDouble(taxPercentField.getText().trim()) : 0.0;
-        } catch (NumberFormatException ex) {
-            showError("Enter a valid tax percentage.");
-            return;
-        }
-
+        try { tax = includeTax ? Double.parseDouble(taxPercentField.getText().trim()) : 0.0; }
+        catch (NumberFormatException ex) { showError("Enter a valid tax percentage."); return; }
         double total = BillingService.calculateTotal(selectedRoom.getPricePerDay(), days, includeTax, tax);
         Booking booking = new Booking(customerId, selectedRoom.getId(), checkIn, checkOut, days, tax, total);
-        final int finalDays = days;
-        final double finalTotal = total;
-
+        final int finalDays = days; final double finalTotal = total;
         Task<Boolean> task = new Task<>() {
-            @Override
-            protected Boolean call() throws Exception {
+            @Override protected Boolean call() throws Exception {
                 boolean saved = bookingService.createBooking(booking);
-                if (saved)
-                    roomService.updateRoomStatus(selectedRoom.getId(), "BOOKED");
+                if (saved) roomService.updateRoomStatus(selectedRoom.getId(), "BOOKED");
                 return saved;
             }
         };
@@ -494,35 +398,105 @@ public class BookingController {
             if (task.getValue()) {
                 bookingBillLabel.setText(String.format("Amount: Rs. %.2f  (%d day(s))", finalTotal, finalDays));
                 loadAllData();
-            } else {
-                showError("Booking could not be saved.");
+            } else showError("Booking could not be saved.");
+        });
+        task.setOnFailed(e -> showError(task.getException().getMessage()));
+        executor.submit(task);
+    }
+
+    // ─────────────────────── CHECKOUT → CLEANING ──────────────────────────
+
+    /**
+     * Checkout flow:
+     * 1. Update room status to CLEANING in DB.
+     * 2. Delete the booking record.
+     * 3. Add room to Cleaning tab.
+     * 4. Submit to CleaningManager (max-3 threads).
+     */
+    @FXML
+    private void onCheckOut() {
+        Booking selected = bookingTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { showError("Please select a booking from the table first."); return; }
+
+        Task<Room> task = new Task<>() {
+            @Override protected Room call() throws Exception {
+                // Mark room as CLEANING (not AVAILABLE yet)
+                roomService.updateRoomStatus(selected.getRoomId(), "CLEANING");
+                bookingService.deleteBooking(selected.getId());
+                return roomService.getRoomById(selected.getRoomId());
+            }
+        };
+        task.setOnSucceeded(e -> {
+            Room room = task.getValue();
+            if (room != null) {
+                loadAllData();                  // refresh all tables
+                addToCleaningTable(room);       // show in Cleaning tab
+                startCleaning(room);            // enqueue / start thread
             }
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
     }
 
-    // ─────────────────────── CHECKOUT (from table) ────────────────────────
+    // ── Cleaning helpers ──────────────────────────────────────────────────
 
-    @FXML
-    private void onCheckOut() {
-        Booking selected = bookingTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showError("Please select a booking from the table first.");
-            return;
-        }
+    /**
+     * Adds the room to the Cleaning table and creates its ProgressBar.
+     * Must be called on the FX thread.
+     */
+    private void addToCleaningTable(Room room) {
+        ProgressBar bar = new ProgressBar(0);
+        bar.setPrefWidth(160);
+        bar.setStyle("-fx-accent: #27ae60;");   // green fill
+        cleaningProgressBars.put(room.getId(), bar);
+        cleaningRooms.add(room);
+        cleaningTable.refresh();
+        updateCleaningStatusLabel();
+    }
 
-        Task<Void> task = new Task<>() {
-            @Override
-            protected Void call() throws Exception {
-                roomService.updateRoomStatus(selected.getRoomId(), "AVAILABLE");
-                bookingService.deleteBooking(selected.getId());
-                return null;
-            }
+    /**
+     * Submits the room to the CleaningManager.
+     * The completion callback (run on FX thread by Platform.runLater) will:
+     *  • update DB: CLEANING → AVAILABLE
+     *  • remove row from Cleaning table
+     *  • refresh the Rooms table so the row turns green
+     */
+    private void startCleaning(Room room) {
+        ProgressBar bar = cleaningProgressBars.get(room.getId());
+
+        Runnable onComplete = () -> {
+            // 1. Update DB on background thread
+            executor.submit(() -> {
+                try {
+                    roomService.updateRoomStatus(room.getId(), "AVAILABLE");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                // 2. Update UI back on FX thread
+                Platform.runLater(() -> {
+                    cleaningRooms.remove(room);
+                    cleaningProgressBars.remove(room.getId());
+                    loadRooms();                // reload rooms → green row
+                    loadAvailableRoomsForBooking();
+                    updateCleaningStatusLabel();
+                    System.out.println("[Controller] Room " + room.getRoomNumber() + " is now AVAILABLE.");
+                });
+            });
         };
-        task.setOnSucceeded(e -> loadAllData());
-        task.setOnFailed(e -> showError(task.getException().getMessage()));
-        executor.submit(task);
+
+        cleaningManager.submit(room, bar, onComplete);
+        updateCleaningStatusLabel();
+    }
+
+    /** Updates the "Active cleaners: X / 3 · Queue: Y" label. */
+    private void updateCleaningStatusLabel() {
+        if (cleaningStatusLabel != null) {
+            cleaningStatusLabel.setText(String.format(
+                    "Active cleaners: %d / %d   ·   Queue: %d",
+                    cleaningManager.getActiveCount(),
+                    CleaningManager.MAX_CLEANERS,
+                    cleaningManager.getQueueSize()));
+        }
     }
 
     // ─────────────────────── BILL POPUP ──────────────────────────────────
@@ -530,16 +504,9 @@ public class BookingController {
     @FXML
     private void onShowBill() {
         Booking selected = bookingTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showError("Please select a booking from the table first.");
-            return;
-        }
-
+        if (selected == null) { showError("Please select a booking from the table first."); return; }
         Task<Room> task = new Task<>() {
-            @Override
-            protected Room call() throws Exception {
-                return roomService.getRoomById(selected.getRoomId());
-            }
+            @Override protected Room call() throws Exception { return roomService.getRoomById(selected.getRoomId()); }
         };
         task.setOnSucceeded(e -> showBillPopup(selected, task.getValue()));
         task.setOnFailed(e -> showBillPopup(selected, null));
@@ -547,24 +514,24 @@ public class BookingController {
     }
 
     private void showBillPopup(Booking selected, Room room) {
-        String roomNo = (room != null) ? room.getRoomNumber() : String.valueOf(selected.getRoomId());
-        String roomType = (room != null) ? room.getRoomType() : "N/A";
-        double pricePerDay = (room != null) ? room.getPricePerDay() : 0.0;
+        String roomNo       = (room != null) ? room.getRoomNumber() : String.valueOf(selected.getRoomId());
+        String roomType     = (room != null) ? room.getRoomType() : "N/A";
+        double pricePerDay  = (room != null) ? room.getPricePerDay() : 0.0;
 
         StringBuilder bill = new StringBuilder();
         bill.append("==========================================\n");
         bill.append("              HOTEL BILL\n");
         bill.append("==========================================\n\n");
-        bill.append(String.format("  Booking ID     :  %d%n", selected.getId()));
-        bill.append(String.format("  Customer ID    :  %d%n", selected.getCustomerId()));
-        bill.append(String.format("  Room No        :  %s%n", roomNo));
-        bill.append(String.format("  Room Type      :  %s%n", roomType));
-        bill.append(String.format("  Check-in       :  %s%n", selected.getCheckInDate()));
-        bill.append(String.format("  Check-out      :  %s%n", selected.getCheckOutDate()));
-        bill.append(String.format("  No. of Days    :  %d%n", selected.getNumberOfDays()));
+        bill.append(String.format("  Booking ID     :  %d%n",   selected.getId()));
+        bill.append(String.format("  Customer ID    :  %d%n",   selected.getCustomerId()));
+        bill.append(String.format("  Room No        :  %s%n",   roomNo));
+        bill.append(String.format("  Room Type      :  %s%n",   roomType));
+        bill.append(String.format("  Check-in       :  %s%n",   selected.getCheckInDate()));
+        bill.append(String.format("  Check-out      :  %s%n",   selected.getCheckOutDate()));
+        bill.append(String.format("  No. of Days    :  %d%n",   selected.getNumberOfDays()));
         bill.append(String.format("  Price / Day    :  Rs. %.2f%n", pricePerDay));
         bill.append(String.format("  Subtotal       :  Rs. %.2f%n", pricePerDay * selected.getNumberOfDays()));
-        bill.append(String.format("  Tax            :  %.2f%%%n", selected.getTaxPercent()));
+        bill.append(String.format("  Tax            :  %.2f%%%n",   selected.getTaxPercent()));
         bill.append("\n──────────────────────────────────────────\n");
         bill.append(String.format("  TOTAL AMOUNT   :  Rs. %.2f%n", selected.getTotalAmount()));
         bill.append("──────────────────────────────────────────\n");
@@ -578,33 +545,28 @@ public class BookingController {
         billLabel.setStyle("-fx-text-fill: #1a3c5e;");
 
         Button closeBtn = new Button("Close");
-        closeBtn.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #2980b9, #1f6fa3);"
-                        + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 24 7 24;"
-                        + "-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #185a8a;"
-                        + "-fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 3, 0, 0, 1);");
+        closeBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #2980b9, #1f6fa3);"
+                + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 24 7 24;"
+                + "-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #185a8a;"
+                + "-fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 3, 0, 0, 1);");
         closeBtn.setOnAction(e -> popup.close());
 
         VBox layout = new VBox(16, billLabel, closeBtn);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(24));
-        layout.setStyle(
-                "-fx-background-color: #f0faf4; -fx-border-color: #a8d5ba; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;");
+        layout.setStyle("-fx-background-color: #f0faf4; -fx-border-color: #a8d5ba;"
+                + "-fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;");
 
-        Scene scene = new Scene(layout);
-        popup.setScene(scene);
+        popup.setScene(new Scene(layout));
         popup.setResizable(false);
         popup.showAndWait();
     }
 
     // ─────────────────────── REFRESH ─────────────────────────────────────
 
-    @FXML
-    private void onRefreshAll() {
-        loadAllData();
-    }
+    @FXML private void onRefreshAll() { loadAllData(); updateCleaningStatusLabel(); }
 
-    // ─────────────────────── DATA LOADERS (threaded) ─────────────────────
+    // ─────────────────────── DATA LOADERS ────────────────────────────────
 
     private void loadAllData() {
         loadCustomers();
@@ -616,24 +578,14 @@ public class BookingController {
 
     private void loadRoomTypeCombos() {
         Task<List<String>> task = new Task<>() {
-            @Override
-            protected List<String> call() throws Exception {
-                return roomService.getDistinctRoomTypes();
-            }
+            @Override protected List<String> call() throws Exception { return roomService.getDistinctRoomTypes(); }
         };
         task.setOnSucceeded(e -> {
-            List<String> types = task.getValue();
-            if (types.isEmpty()) {
-                types = List.of("SINGLE", "DOUBLE", "SUITE");
-            }
-            String prevBooking = bookingRoomTypeCombo.getValue();
-            ObservableList<String> roomTypes = FXCollections.observableArrayList(types);
-            bookingRoomTypeCombo.setItems(roomTypes);
-            if (prevBooking != null && types.contains(prevBooking)) {
-                bookingRoomTypeCombo.setValue(prevBooking);
-            } else {
-                bookingRoomTypeCombo.getSelectionModel().selectFirst();
-            }
+            List<String> types = task.getValue().isEmpty() ? List.of("SINGLE", "DOUBLE", "SUITE") : task.getValue();
+            String prev = bookingRoomTypeCombo.getValue();
+            bookingRoomTypeCombo.setItems(FXCollections.observableArrayList(types));
+            if (prev != null && types.contains(prev)) bookingRoomTypeCombo.setValue(prev);
+            else bookingRoomTypeCombo.getSelectionModel().selectFirst();
         });
         task.setOnFailed(e -> {
             bookingRoomTypeCombo.setItems(FXCollections.observableArrayList("SINGLE", "DOUBLE", "SUITE"));
@@ -644,17 +596,11 @@ public class BookingController {
 
     private void loadCustomers() {
         Task<List<Customer>> task = new Task<>() {
-            @Override
-            protected List<Customer> call() throws Exception {
-                return customerService.getAllCustomers();
-            }
+            @Override protected List<Customer> call() throws Exception { return customerService.getAllCustomers(); }
         };
         task.setOnSucceeded(e -> {
             allCustomers.setAll(task.getValue());
-            // If no search filter is wired yet, set items directly as fallback
-            if (customerSearchField == null) {
-                customerTable.setItems(allCustomers);
-            }
+            if (customerSearchField == null) customerTable.setItems(allCustomers);
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
@@ -662,16 +608,11 @@ public class BookingController {
 
     private void loadRooms() {
         Task<List<Room>> task = new Task<>() {
-            @Override
-            protected List<Room> call() throws Exception {
-                return roomService.getAllRooms();
-            }
+            @Override protected List<Room> call() throws Exception { return roomService.getAllRooms(); }
         };
         task.setOnSucceeded(e -> {
             allRooms.setAll(task.getValue());
-            if (roomSearchField == null) {
-                roomTable.setItems(allRooms);
-            }
+            if (roomSearchField == null) roomTable.setItems(allRooms);
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
@@ -679,16 +620,11 @@ public class BookingController {
 
     private void loadBookings() {
         Task<List<Booking>> task = new Task<>() {
-            @Override
-            protected List<Booking> call() throws Exception {
-                return bookingService.getAllBookings();
-            }
+            @Override protected List<Booking> call() throws Exception { return bookingService.getAllBookings(); }
         };
         task.setOnSucceeded(e -> {
             allBookings.setAll(task.getValue());
-            if (bookingSearchField == null) {
-                bookingTable.setItems(allBookings);
-            }
+            if (bookingSearchField == null) bookingTable.setItems(allBookings);
         });
         task.setOnFailed(e -> showError(task.getException().getMessage()));
         executor.submit(task);
@@ -697,53 +633,38 @@ public class BookingController {
     // ─────────────────────── HELPERS ─────────────────────────────────────
 
     private void clearCustomerForm() {
-        customerNameField.clear();
-        customerEmailField.clear();
-        customerPhoneField.clear();
-        customerAddressField.clear();
+        customerNameField.clear(); customerEmailField.clear();
+        customerPhoneField.clear(); customerAddressField.clear();
     }
 
     private void showError(String message) {
-        // Always run UI changes on the FX Application Thread
         Runnable show = () -> {
             System.err.println("[ERROR] " + message);
-
             Stage popup = new Stage();
             popup.initModality(Modality.APPLICATION_MODAL);
             popup.setTitle("Error");
-
             Label msgLabel = new Label(message);
             msgLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
             msgLabel.setStyle("-fx-text-fill: #c0392b;");
             msgLabel.setWrapText(true);
             msgLabel.setMaxWidth(350);
-
             Button okBtn = new Button("OK");
-            okBtn.setStyle(
-                    "-fx-background-color: linear-gradient(to bottom, #c0392b, #a93226);"
-                            + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 20 6 20;"
-                            + "-fx-background-radius: 5; -fx-border-radius: 5; -fx-cursor: hand;"
-                            + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 3, 0, 0, 1);");
+            okBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #c0392b, #a93226);"
+                    + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 20 6 20;"
+                    + "-fx-background-radius: 5; -fx-border-radius: 5; -fx-cursor: hand;"
+                    + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 3, 0, 0, 1);");
             okBtn.setOnAction(e -> popup.close());
-
             VBox layout = new VBox(12, msgLabel, okBtn);
             layout.setAlignment(Pos.CENTER);
             layout.setPadding(new Insets(20));
-            layout.setStyle(
-                    "-fx-background-color: #fff5f5; -fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
-
+            layout.setStyle("-fx-background-color: #fff5f5; -fx-border-color: #e74c3c;"
+                    + "-fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
             popup.setScene(new Scene(layout));
             popup.setResizable(false);
             popup.showAndWait();
         };
-
-        if (Platform.isFxApplicationThread())
-            show.run();
-        else
-            Platform.runLater(show);
+        if (Platform.isFxApplicationThread()) show.run(); else Platform.runLater(show);
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
+    private boolean isBlank(String value) { return value == null || value.trim().isEmpty(); }
 }

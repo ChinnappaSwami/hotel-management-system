@@ -33,6 +33,7 @@
 | 📅 **Room Booking** | Book available rooms with check-in dates and duration |
 | 🧾 **Billing & Tax** | Preview bills with optional tax calculation before confirming |
 | 🖨️ **Bill Popup** | View a formatted itemized hotel bill for any booking |
+| 🧹 **Room Cleaning** | Track and manage room cleaning tasks and status |
 | 🔁 **Checkout** | Release booked rooms back to available status on checkout |
 | 🔍 **Live Filtering** | Filter available rooms dynamically by room type |
 | 💾 **MySQL Persistence** | All data persisted in a relational MySQL database |
@@ -84,6 +85,9 @@ hotel-management-system/
 │   │   │   └── com/hotel/management/
 │   │   │       ├── MainApp.java                    # JavaFX entry point
 │   │   │       ├── module-info.java                # Java module descriptor
+│   │   │       ├── cleaning/
+│   │   │       │   ├── CleaningManager.java        # Cleaning task management
+│   │   │       │   └── RoomCleaner.java            # Room cleaner entity
 │   │   │       ├── controller/
 │   │   │       │   └── BookingController.java      # Main UI controller
 │   │   │       ├── db/
@@ -96,7 +100,8 @@ hotel-management-system/
 │   │   │           ├── BillingService.java         # Bill & tax calculation
 │   │   │           ├── BookingService.java         # Booking CRUD
 │   │   │           ├── CustomerService.java        # Customer CRUD
-│   │   │           └── RoomService.java            # Room CRUD
+│   │   │           ├── RoomService.java            # Room CRUD
+│   │   │           └── Repository.java             # Data repository
 │   │   └── resources/
 │   │       ├── schema.sql                          # Database schema & seed data
 │   │       └── com/hotel/management/
@@ -110,6 +115,7 @@ hotel-management-system/
     ├── Background_Image.jpg
     ├── Bill.png
     ├── Book.png
+    ├── Cleaning.png
     ├── Manage_customers.png
     └── Managae_rooms.png
 ```
@@ -221,6 +227,10 @@ mvn javafx:run
 > | Booking & Bill | Bill Popup |
 > |---|---|
 > | ![Booking](Required_images/Book.png) | ![Bill](Required_images/Bill.png) |
+
+> | Room Cleaning |
+> |---|
+> | ![Cleaning](Required_images/Cleaning.png) |
 
 ---
 
